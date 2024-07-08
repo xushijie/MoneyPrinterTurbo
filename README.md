@@ -380,6 +380,8 @@ An error happened while trying to locate the files on the Hub and we cannot find
 specified revision on the local disk. Please check your internet connection and try again.
 Trying to load the model directly from the local cache, if it exists.
 
+测试
+
 解决方法：[点击查看如何从网盘手动下载模型](#%E5%AD%97%E5%B9%95%E7%94%9F%E6%88%90-)
 
 ## 反馈建议 📢
