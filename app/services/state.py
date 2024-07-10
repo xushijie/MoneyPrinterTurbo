@@ -59,6 +59,7 @@ class RedisState(BaseState):
             **kwargs,
         }
 
+        # @TODO  Using a single redis instruction.
         for field, value in fields.items():
             self._redis.hset(task_id, field, str(value))
 

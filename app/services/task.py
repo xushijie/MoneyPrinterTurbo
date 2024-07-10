@@ -1,7 +1,9 @@
 import math
 import os.path
 import re
+from datetime import datetime
 from os import path
+
 
 from loguru import logger
 
@@ -198,7 +200,9 @@ def start(task_id, params: VideoParams):
 
     kwargs = {
         "videos": final_video_paths,
-        "combined_videos": combined_video_paths
+        "combined_videos": combined_video_paths,
+        "end_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     }
     sm.state.update_task(task_id, state=const.TASK_STATE_COMPLETE, progress=100, **kwargs)
     return kwargs

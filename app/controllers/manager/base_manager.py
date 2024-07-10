@@ -1,4 +1,5 @@
 import threading
+from loguru import logger
 from typing import Callable, Any, Dict
 
 
@@ -16,9 +17,11 @@ class TaskManager:
         with self.lock:
             if self.current_tasks < self.max_concurrent_tasks:
                 print(f"add task: {func.__name__}, current_tasks: {self.current_tasks}")
+                logger.success(f"add Task in a local mode")
                 self.execute_task(func, *args, **kwargs)
             else:
                 print(f"enqueue task: {func.__name__}, current_tasks: {self.current_tasks}")
+                lgger.success(f"enqueue task: {func.__name__}, current_tasks: {self.current_tasks}")
                 self.enqueue({"func": func, "args": args, "kwargs": kwargs})
 
     def execute_task(self, func: Callable, *args: Any, **kwargs: Any):

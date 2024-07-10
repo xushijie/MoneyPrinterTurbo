@@ -1,10 +1,15 @@
 from queue import Queue
 from typing import Dict
+from loguru import logger
 
 from app.controllers.manager.base_manager import TaskManager
 
 
 class InMemoryTaskManager(TaskManager):
+    def __init__(self):
+        logger.success("__init__ Inmemory Manager")
+        super(self)
+
     def create_queue(self):
         return Queue()
 

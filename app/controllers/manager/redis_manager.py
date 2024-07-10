@@ -1,5 +1,6 @@
 import json
 from typing import Dict
+from loguru import logger
 
 import redis
 
@@ -16,6 +17,7 @@ FUNC_MAP = {
 class RedisTaskManager(TaskManager):
     def __init__(self, max_concurrent_tasks: int, redis_url: str):
         self.redis_client = redis.Redis.from_url(redis_url)
+        logger.success("__init__ Redis Manager")
         super().__init__(max_concurrent_tasks)
 
     def create_queue(self):
@@ -23,6 +25,7 @@ class RedisTaskManager(TaskManager):
 
     def enqueue(self, task: Dict):
         task_with_serializable_params = task.copy()
+        logger.success(f'enqueue a task  {utils.to_json(task)} to redis')
 
         if 'params' in task['kwargs'] and isinstance(task['kwargs']['params'], VideoParams):
             task_with_serializable_params['kwargs']['params'] = task['kwargs']['params'].dict()
@@ -33,6 +36,7 @@ class RedisTaskManager(TaskManager):
 
     def dequeue(self):
         task_json = self.redis_client.lpop(self.queue)
+        logger.success(f'dequeue a task  {task_json} from redis')
         if task_json:
             task_info = json.loads(task_json)
             # 将函数名称转换回函数对象
