@@ -12,7 +12,7 @@ from loguru import logger
 from app.config import config
 from app.controllers import base
 from app.controllers.manager.memory_manager import InMemoryTaskManager
-from app.controllers.manager.redis_manager import ChanaRedisTaskManager
+from app.controllers.manager.chana_redis_manager import ChanaRedisTaskManager
 from app.controllers.v1.base import new_router
 from app.models.exception import HttpException
 from app.models.schema import TaskVideoRequest, TaskQueryResponse, TaskResponse, TaskQueryRequest, \
@@ -30,7 +30,7 @@ _redis_host = config.app.get("redis_host", "localhost")
 _redis_port = config.app.get("redis_port", 6379)
 _redis_db = config.app.get("redis_db", 0)
 _redis_password = config.app.get("redis_password", None)
-_max_concurrent_tasks = config.app.get("max_concurrent_tasks", 5)
+_max_concurrent_tasks = config.app.get("max_concurrent_tasks", 1)
 
 redis_url = f"redis://:{_redis_password}@{_redis_host}:{_redis_port}/{_redis_db}"
 # 根据配置选择合适的任务管理器

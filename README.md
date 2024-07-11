@@ -401,3 +401,8 @@ Trying to load the model directly from the local cache, if it exists.
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=harry0703/MoneyPrinterTurbo&type=Date)](https://star-history.com/#harry0703/MoneyPrinterTurbo&Date)
+
+
+## 出现的问题 http Request version issue： 
+
+pip3 install --force-reinstall 'requests<2.29.0' 'urllib3<2.0'

@@ -41,10 +41,8 @@ def send_heartbeat_to_nacos():
     while True:
         try:
             response = requests.put(url, params=params)
-            if response.status_code == 200:
-                print("Heartbeat sent successfully to Nacos")
-            else:
-                print(f"Failed to send heartbeat to Nacos: {response.status_code} {response.text}")
+            if response.status_code != 200:
+                logger.error(f"Failed to send heartbeat to Nacos: {response.status_code} {response.text}")
         except Exception as e:
             print(f"Error sending heartbeat to Nacos: {e}")
         time.sleep(HEARTBEAT_INTERVAL)
