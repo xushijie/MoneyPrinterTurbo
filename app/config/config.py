@@ -36,6 +36,7 @@ def save_config():
         _cfg["app"] = app
         _cfg["azure"] = azure
         _cfg["ui"] = ui
+        _cfg["oss"] = oss
         f.write(toml.dumps(_cfg))
 
 
@@ -45,6 +46,7 @@ whisper = _cfg.get("whisper", {})
 proxy = _cfg.get("proxy", {})
 azure = _cfg.get("azure", {})
 ui = _cfg.get("ui", {})
+oss = _cfg.get("oss", {})
 
 hostname = socket.gethostname()
 

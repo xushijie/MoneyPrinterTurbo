@@ -1,10 +1,10 @@
 import time
 import threading
-import concurrent.futures
-from typing import Callable, Dict, Any
 from loguru import logger
 
 from app.controllers.manager.redis_manager import RedisTaskManager
+from app.services import oss
+from app.utils import utils
 
 
 class ChanaRedisTaskManager(RedisTaskManager):
@@ -46,7 +46,7 @@ class ChanaRedisTaskManager(RedisTaskManager):
                     flag = True
                     self.counter.inc()
                     logger.info(f"Scedule to run the task:  {task_info['kwargs']['task_id']}")
-                    task_info['func'](*task_info['args'], **task_info['kwargs'])
+                    kwars = task_info['func'](*task_info['args'], **task_info['kwargs'])
                 time.sleep(1)
             except Exception as e:
                 logger.exception(f"Caught an exception: {task_info['kwargs']['task_id']}, {e}")
@@ -57,6 +57,15 @@ class ChanaRedisTaskManager(RedisTaskManager):
 
 
         logger.info("Finish thread")
+
+    def post_process(self, task_id, kargs):
+        """
+        POST process a video and push it to the S3. 
+        """
+        filepath = kargs.get("videos")
+        if filepath: 
+            oss.push_data_to_oss(filepath, utils.get_filename(filepath))
+        
 
 
 class AtomicCounter(object):
