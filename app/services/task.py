@@ -205,6 +205,9 @@ def start(task_id, params: VideoParams):
 
     }
     sm.state.update_task(task_id, state=const.TASK_STATE_COMPLETE, progress=100, **kwargs)
+    kwargs['cached_videos'] = downloaded_videos
+    # Will expire after 3 hours
+    sm.state.expire(task_id)
     return kwargs
 
 # def start_test(task_id, params: VideoParams):

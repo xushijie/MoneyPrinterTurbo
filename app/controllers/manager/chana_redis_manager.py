@@ -1,6 +1,7 @@
 import time
 import threading
 from loguru import logger
+from typing import Callable, Any, Dict
 
 from app.controllers.manager.redis_manager import RedisTaskManager
 from app.services import oss
@@ -46,7 +47,8 @@ class ChanaRedisTaskManager(RedisTaskManager):
                     flag = True
                     self.counter.inc()
                     logger.info(f"Scedule to run the task:  {task_info['kwargs']['task_id']}")
-                    kwars = task_info['func'](*task_info['args'], **task_info['kwargs'])
+                    kwargs = task_info['func'](*task_info['args'], **task_info['kwargs'])
+                    self.post_process(task_info['kwargs']['task_id'], kwargs)
                 time.sleep(1)
             except Exception as e:
                 logger.exception(f"Caught an exception: {task_info['kwargs']['task_id']}, {e}")
@@ -55,17 +57,24 @@ class ChanaRedisTaskManager(RedisTaskManager):
                     flag = False
                     self.counter.dec()
 
-
         logger.info("Finish thread")
 
     def post_process(self, task_id, kargs):
         """
-        POST process a video and push it to the S3. 
+        POST process a video and push it to the S3.
+        {
+             "videos": final_video_paths,
+             "combined_videos": combined_video_paths,
+             "end_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
         """
-        filepath = kargs.get("videos")
-        if filepath: 
-            oss.push_data_to_oss(filepath, utils.get_filename(filepath))
-        
+        final_videos = kargs.get("videos", [])
+        for i, final_video in enumerate(final_videos):
+            oss.push_data_to_oss(final_video, f"{task_id}_{i}.mp4", 'video')
+
+        # @TODO  The local storage purge for `combined_videos` is DEFERRED here
+        cached_videos = kargs.get('cached_videos', [])
+        utils.remove(cached_videos, final_videos)
 
 
 class AtomicCounter(object):

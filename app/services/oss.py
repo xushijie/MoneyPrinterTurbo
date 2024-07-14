@@ -1,13 +1,21 @@
 import oss2
 from loguru import logger
+from app.config import config
 
 # Replace with your own credentials and bucket information
-ACCESS_KEY_ID = 'your-access-key-id'
-ACCESS_KEY_SECRET = 'your-access-key-secret'
-ENDPOINT = 'http://oss-cn-hangzhou.aliyuncs.com'  # Adjust endpoint based on your region
-BUCKET_NAME = 'your-bucket-name'
+ACCESS_KEY_ID = config.oss.get('id', '')
+ACCESS_KEY_SECRET = config.oss.get('secret', '')
+ENDPOINT = config.oss.get('end_point', 'https://oss-cn-beijing.aliyuncs.com')
+BUCKET_NAME =  config.oss.get('bucket', 'chana-video')
 
-def push_data_to_oss(file_path, object_name):
+DIR_MAPPING = {
+    "video": "video",
+    "material_music": "materials/music",
+    "material_video": "materials/video",
+    "material_image": "materials/image"
+}
+
+def push_data_to_oss(file_path, object_name, type):
     """
     Uploads a file to Alibaba Cloud OSS.
 
@@ -17,8 +25,10 @@ def push_data_to_oss(file_path, object_name):
     # Initialize the OSS Auth and Bucket objects
     auth = oss2.Auth(ACCESS_KEY_ID, ACCESS_KEY_SECRET)
     bucket = oss2.Bucket(auth, ENDPOINT, BUCKET_NAME)
+
     
     try:
+        object_name = get_target(object_name, type)
         # Upload the file
         result = bucket.put_object_from_file(object_name, file_path)
         # Check if the upload is successful
@@ -41,6 +51,7 @@ def download_data_from_oss(object_name, download_path):
     bucket = oss2.Bucket(auth, ENDPOINT, BUCKET_NAME)
     
     try:
+        object_name = get_target(object_name, type)
         # Download the file
         result = bucket.get_object_to_file(object_name, download_path)
         # Check if the download is successful
@@ -51,6 +62,12 @@ def download_data_from_oss(object_name, download_path):
     except Exception as e:
         logger.exception(f"Error downloading file from OSS: {e}")
 
+
+def get_target(target: str, type: str):
+        dir = DIR_MAPPING.get(type, None)
+        if dir:
+           target = f'{dir}/{target}'
+        return target
         
 # Example usage
 if __name__ == "__main__":
