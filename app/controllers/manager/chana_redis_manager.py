@@ -74,7 +74,9 @@ class ChanaRedisTaskManager(RedisTaskManager):
 
         # @TODO  The local storage purge for `combined_videos` is DEFERRED here
         cached_videos = kargs.get('cached_videos', [])
-        utils.remove(cached_videos, final_videos)
+        if not config.debug:
+            utils.remove(cached_videos, final_videos)
+            logger.info(f"Complete remove local caches for {task_id}")
 
 
 class AtomicCounter(object):
