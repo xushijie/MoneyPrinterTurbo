@@ -22,7 +22,7 @@ jobs:
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
-      - run: echo "Start to setup Docker build"
+      - run: echo "start to setup Docker build"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
