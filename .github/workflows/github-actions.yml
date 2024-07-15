@@ -22,9 +22,7 @@ jobs:
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
-      - run: "Start to setup Docker build"
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+      - run: echo "Start to setup Docker build"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
