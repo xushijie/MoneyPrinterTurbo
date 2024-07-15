@@ -36,6 +36,7 @@ def save_config():
         _cfg["app"] = app
         _cfg["azure"] = azure
         _cfg["ui"] = ui
+        _cfg["oss"] = oss
         f.write(toml.dumps(_cfg))
 
 
@@ -45,6 +46,7 @@ whisper = _cfg.get("whisper", {})
 proxy = _cfg.get("proxy", {})
 azure = _cfg.get("azure", {})
 ui = _cfg.get("ui", {})
+oss = _cfg.get("oss", {})
 
 hostname = socket.gethostname()
 
@@ -56,6 +58,7 @@ project_description = _cfg.get("project_description",
                                "<a href='https://github.com/harry0703/MoneyPrinterTurbo'>https://github.com/harry0703/MoneyPrinterTurbo</a>")
 project_version = _cfg.get("project_version", "1.1.9")
 reload_debug = False
+debug = _cfg.get('debug', False)
 
 imagemagick_path = app.get("imagemagick_path", "")
 if imagemagick_path and os.path.isfile(imagemagick_path):

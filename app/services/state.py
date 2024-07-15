@@ -15,6 +15,10 @@ class BaseState(ABC):
     def get_task(self, task_id: str):
         pass
 
+    @abstractmethod
+    def expire(self, task_id: str):
+        pass
+
 
 # Memory state management
 class MemoryState(BaseState):
@@ -40,6 +44,9 @@ class MemoryState(BaseState):
         if task_id in self._tasks:
             del self._tasks[task_id]
 
+    def expire(self, task_id: str):
+        pass
+        
 
 # Redis state management
 class RedisState(BaseState):
@@ -59,6 +66,7 @@ class RedisState(BaseState):
             **kwargs,
         }
 
+        # @TODO  Using a single redis instruction.
         for field, value in fields.items():
             self._redis.hset(task_id, field, str(value))
 
@@ -69,7 +77,11 @@ class RedisState(BaseState):
 
         task = {key.decode('utf-8'): self._convert_to_original_type(value) for key, value in task_data.items()}
         return task
+    
+    def expire(self, task_id: str):
+        self._redis.expire(task_id, 3600*3)
 
+    
     def delete_task(self, task_id: str):
         self._redis.delete(task_id)
 

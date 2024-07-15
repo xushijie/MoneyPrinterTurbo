@@ -7,6 +7,7 @@ from loguru import logger
 import json
 from uuid import uuid4
 import urllib3
+import shutil
 
 from app.models import const
 
@@ -226,3 +227,24 @@ def load_locales(i18n_dir):
 
 def parse_extension(filename):
     return os.path.splitext(filename)[1].strip().lower().replace(".", "")
+
+def get_fileName(file_path):
+    return os.path.basename(full_path)
+
+def remove(files, video_paths):
+    try:
+        # 检查并删除文件列表中的文件
+        for file in files:
+            if os.path.exists(file):
+                os.remove(file)
+
+        for video_path in video_paths:
+            task_dir = os.path.dirname(video_path)
+            # 检查并删除目录
+            if os.path.exists(task_dir):
+                shutil.rmtree(task_dir)
+
+        return True
+    except Exception as e:
+        print(f"发生错误：{e}")
+        return False

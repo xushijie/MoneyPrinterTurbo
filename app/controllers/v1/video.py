@@ -2,6 +2,7 @@ import os
 import glob
 import pathlib
 import shutil
+from datetime import datetime
 
 from fastapi import Request, Depends, Path, BackgroundTasks, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
@@ -11,7 +12,7 @@ from loguru import logger
 from app.config import config
 from app.controllers import base
 from app.controllers.manager.memory_manager import InMemoryTaskManager
-from app.controllers.manager.redis_manager import RedisTaskManager
+from app.controllers.manager.chana_redis_manager import ChanaRedisTaskManager
 from app.controllers.v1.base import new_router
 from app.models.exception import HttpException
 from app.models.schema import TaskVideoRequest, TaskQueryResponse, TaskResponse, TaskQueryRequest, \
@@ -29,13 +30,16 @@ _redis_host = config.app.get("redis_host", "localhost")
 _redis_port = config.app.get("redis_port", 6379)
 _redis_db = config.app.get("redis_db", 0)
 _redis_password = config.app.get("redis_password", None)
-_max_concurrent_tasks = config.app.get("max_concurrent_tasks", 5)
+_max_concurrent_tasks = config.app.get("max_concurrent_tasks", 1)
 
 redis_url = f"redis://:{_redis_password}@{_redis_host}:{_redis_port}/{_redis_db}"
 # 根据配置选择合适的任务管理器
 if _enable_redis:
-    task_manager = RedisTaskManager(max_concurrent_tasks=_max_concurrent_tasks, redis_url=redis_url)
+    logger.success(f"init RedisTaskManger...")
+#    task_manager = RedisTaskManager(max_concurrent_tasks=_max_concurrent_tasks, redis_url=redis_url)
+    task_manager = ChanaRedisTaskManager(max_concurrent_tasks=_max_concurrent_tasks, redis_url=redis_url)
 else:
+    logger.success(f"init InMemory Task Manager...")
     task_manager = InMemoryTaskManager(max_concurrent_tasks=_max_concurrent_tasks)
 
 # @router.post("/videos-test", response_model=TaskResponse, summary="Generate a short video")
@@ -64,7 +68,8 @@ def create_video(background_tasks: BackgroundTasks, request: Request, body: Task
             "request_id": request_id,
             "params": body.dict(),
         }
-        sm.state.update_task(task_id)
+        sm.state.update_task(task_id, start=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                             )
         # background_tasks.add_task(tm.start, task_id=task_id, params=body)
         task_manager.add_task(tm.start, task_id=task_id, params=body)
         logger.success(f"video created: {utils.to_json(task)}")
