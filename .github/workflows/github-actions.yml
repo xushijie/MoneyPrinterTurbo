@@ -29,6 +29,7 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "start to setup Docker build"
+      - run: echo "TAG_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV   
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
@@ -39,10 +40,7 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: Build and push image
-        #env:
-        #  IMAGE_TAG: ${{ steps.meta.outputs.tags }}
         run: |
-          echo "TAG_VERSION=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
           echo "push version ${{TAG_VERSION}}"
           docker build -t registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:${{TAG_VERSION}} .
           docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:${{TAG_VERSION}}
