@@ -24,7 +24,7 @@ on:
 jobs:
   Dev:
     runs-on: ubuntu-latest
-    if: github.event.inputs.environment == 'dev' and startsWith(github.event.ref, 'refs/tags')
+    if: github.event.inputs.environment == 'dev' && startsWith(github.event.ref, 'refs/tags')
     
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
@@ -62,7 +62,7 @@ jobs:
     name: Deploy to Dev
     runs-on: ubuntu-latest
     needs: Dev
-    if: github.event.inputs.environment == 'prod' and startsWith(github.event.ref, 'refs/tags')
+    if: github.event.inputs.environment == 'prod' && startsWith(github.event.ref, 'refs/tags')
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
