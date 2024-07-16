@@ -406,3 +406,20 @@ Trying to load the model directly from the local cache, if it exists.
 ## 出现的问题 http Request version issue： 
 
 pip3 install --force-reinstall 'requests<2.29.0' 'urllib3<2.0'
+
+
+The easiest way to do this is to create the .env file as a github secret and then create the .env file in your action.
+So step 1 is to create the .env files as a secret in github as a base64 encoded string:
+openssl base64 -A -in qa.env -out qa.txt
+or
+cat qa.env | base64 -w 0 > qa.txt
+Then in you action, you can do something like
+
+- name: Do Something with env files
+  env:
+    QA_ENV_FILE: ${{ secrets.QA_ENV_FILE }}
+    PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+  run: |
+    [ "$YOUR_ENVIRONMENT" = qa ] && echo $QA_ENV_FILE | base64 --decode > .env
+    [ "$YOUR_ENVIRONMENT" = prod ] && echo $PROD_ENV_FILE | base64 --decode > .env
+
