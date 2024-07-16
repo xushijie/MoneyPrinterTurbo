@@ -15,6 +15,8 @@ on:
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
+    if: startsWith(github.event.ref, 'refs/tags')
+
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
@@ -27,7 +29,7 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "start to setup Docker build"
-
+      - run: echo "TAG_VERSION=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
@@ -38,12 +40,12 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: Build and push image
-        env:
-          IMAGE_TAG: ${{ steps.meta.outputs.tags }}
+        #env:
+        #  IMAGE_TAG: ${{ steps.meta.outputs.tags }}
         run: |
-          echo "the tag is ${{IMAGE_TAG}}"
-          docker build -t registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:${{IMAGE_TAG}} .
-          docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:${{IMAGE_TAG}}
+          echo "push version ${{TAG_VERSION}}"
+          docker build -t registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:${{TAG_VERSION}} .
+          docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:${{TAG_VERSION}}
 
 
       - run: echo "🍏 This job's status is ${{ job.status }}."
