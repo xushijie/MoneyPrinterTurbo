@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
       - main
+  tags: 
+    - v* 
 
 jobs:
   Explore-GitHub-Actions:
@@ -34,11 +36,12 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: Build and push image
-        env:
-          IMAGE_TAG: ${{ github.sha }}
+        #env:
+        #  IMAGE_TAG: ${{ tags: ${{ steps.meta.outputs.tags }}
         run: |
-          docker build -t registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:$IMAGE_TAG .
-          docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:$IMAGE_TAG
+          docker build -t registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:${{steps.meta.outputs.tags}} .
+          docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:${{steps.meta.outputs.tags}}
+
 
       - run: echo "🍏 This job's status is ${{ job.status }}."
 
