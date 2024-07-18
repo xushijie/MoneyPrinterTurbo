@@ -6,6 +6,7 @@ from typing import Callable, Any, Dict
 from app.controllers.manager.redis_manager import RedisTaskManager
 from app.services import oss
 from app.utils import utils
+from app.config import config
 
 
 class ChanaRedisTaskManager(RedisTaskManager):

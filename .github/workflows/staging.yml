@@ -1,4 +1,4 @@
-name: MoneyPrintTurbo workflow for staging
+name: Staging
 run-name: ${{ github.actor }} is CI/CD for MoneyPrintTurbo stagingActions 🚀
 on:
   push:
@@ -7,6 +7,7 @@ on:
 
 jobs:
   build:
+    name: Build and Push
     runs-on: ubuntu-latest
     environment: dev
     steps:

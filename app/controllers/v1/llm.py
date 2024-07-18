@@ -1,6 +1,6 @@
 from fastapi import Request
 from app.controllers.v1.base import new_router
-from app.models.schema import VideoScriptResponse, VideoScriptRequest, VideoTermsResponse, VideoTermsRequest
+from app.models.schema import VideoScriptResponse, VideoScriptRequest, VideoTermsResponse, VideoTermsRequest, BaseResponse
 from app.services import llm
 from app.utils import utils
 
@@ -27,5 +27,12 @@ def generate_video_terms(request: Request, body: VideoTermsRequest):
                                      amount=body.amount)
     response = {
         "video_terms": video_terms
+    }
+    return utils.get_response(200, response)
+
+@router.get("/ping", response_model=BaseResponse, summary="test")
+def ping():
+    response = {
+        "message": "pong"
     }
     return utils.get_response(200, response)
