@@ -28,11 +28,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Now copy the rest of the codebase into the image
 COPY . .
 
+RUN mkdir storage
+
 # Expose the port the app runs on
 EXPOSE 8501
 
+RUN pwd && ls && echo "\n====" && cat main.py
+
 # Command to run the application
-CMD ["streamlit", "run", "./webui/Main.py","--browser.serverAddress=127.0.0.1","--server.enableCORS=True","--browser.gatherUsageStats=False"]
+ENTRYPOINT   ["python", "main.py" ]
+#CMD ["streamlit", "run", "./webui/Main.py","--browser.serverAddress=127.0.0.1","--server.enableCORS=True","--browser.gatherUsageStats=False"]
 
 # 1. Build the Docker image using the following command
 # docker build -t moneyprinterturbo .
