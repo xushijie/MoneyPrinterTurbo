@@ -6,7 +6,7 @@ from app.config import config
 ACCESS_KEY_ID = config.oss.get('id', '')
 ACCESS_KEY_SECRET = config.oss.get('secret', '')
 ENDPOINT = config.oss.get('end_point', 'https://oss-cn-beijing.aliyuncs.com')
-BUCKET_NAME =  config.oss.get('bucket', 'chana-video')
+BUCKET_NAME = config.oss.get('bucket', 'chana-video')
 
 DIR_MAPPING = {
     "video": "video",
@@ -26,7 +26,6 @@ def push_data_to_oss(file_path, object_name, type):
     auth = oss2.Auth(ACCESS_KEY_ID, ACCESS_KEY_SECRET)
     bucket = oss2.Bucket(auth, ENDPOINT, BUCKET_NAME)
 
-    
     try:
         object_name = get_target(object_name, type)
         # Upload the file
@@ -49,7 +48,7 @@ def download_data_from_oss(object_name, download_path):
     # Initialize the OSS Auth and Bucket objects
     auth = oss2.Auth(ACCESS_KEY_ID, ACCESS_KEY_SECRET)
     bucket = oss2.Bucket(auth, ENDPOINT, BUCKET_NAME)
-    
+
     try:
         object_name = get_target(object_name, type)
         # Download the file
@@ -62,17 +61,31 @@ def download_data_from_oss(object_name, download_path):
     except Exception as e:
         logger.exception(f"Error downloading file from OSS: {e}")
 
+def delete_resource(object_name: str, type: str):
+    # Initialize the OSS Auth and Bucket objects
+    auth = oss2.Auth(ACCESS_KEY_ID, ACCESS_KEY_SECRET)
+    bucket = oss2.Bucket(auth, ENDPOINT, BUCKET_NAME)
+
+    try:
+        object_name = get_target(object_name, type)
+        result = bucket.delete_object(target)
+        if result.status == 204:
+            print(f'Successfully removed {target} from OSS.')
+        else:
+            print(f'Failed to remove {target} from OSS. Status: {result.status}')
+    except oss2.exceptions.OssError as e:
+        print(f'Error occurred: {e}')
 
 def get_target(target: str, type: str):
-        dir = DIR_MAPPING.get(type, None)
-        if dir:
-           target = f'{dir}/{target}'
-        return target
-        
+    dir = DIR_MAPPING.get(type, None)
+    if dir:
+        target = f'{dir}/{target}'
+    return target
+
+
 # Example usage
 if __name__ == "__main__":
     local_file_path = 'path/to/your/local/file.txt'  # Replace with the path to your local file
     oss_object_name = 'your-oss-object-name.txt'    # Replace with the desired name in OSS
-    
-    push_data_to_oss(local_file_path, oss_object_name)
 
+    push_data_to_oss(local_file_path, oss_object_name)

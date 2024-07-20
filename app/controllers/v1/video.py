@@ -20,7 +20,7 @@ from app.models.schema import TaskVideoRequest, TaskQueryResponse, TaskResponse,
 from app.services import task as tm
 from app.services import state as sm
 from app.utils import utils
-
+from app.services.oss import delete_resource
 # 认证依赖项
 # router = new_router(dependencies=[Depends(base.verify_token)])
 router = new_router()
@@ -71,9 +71,11 @@ def create_video(background_tasks: BackgroundTasks, request: Request, body: Task
         sm.state.update_task(task_id, start=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                              )
         # background_tasks.add_task(tm.start, task_id=task_id, params=body)
-        task_manager.add_task(tm.start, task_id=task_id, params=body)
-        logger.success(f"video created: {utils.to_json(task)}")
-        return utils.get_response(200, task)
+        result = task_manager.add_task(tm.start, task_id=task_id, params=body)
+        if result:
+            logger.success(f"video created: {utils.to_json(task)}")
+            return utils.get_response(200, task)
+        return utils.get_response(status=201, message="Too many tasks are pending, please retry later")
     except ValueError as e:
         raise HttpException(task_id=task_id, status_code=400, message=f"{request_id}: {str(e)}")
 
@@ -89,28 +91,28 @@ def get_task(request: Request, task_id: str = Path(..., description="Task ID"),
     request_id = base.get_task_id(request)
     task = sm.state.get_task(task_id)
     if task:
-        task_dir = utils.task_dir()
+        # task_dir = utils.task_dir()
 
-        def file_to_uri(file):
-            if not file.startswith(endpoint):
-                _uri_path = v.replace(task_dir, "tasks").replace("\\", "/")
-                _uri_path = f"{endpoint}/{_uri_path}"
-            else:
-                _uri_path = file
-            return _uri_path
+        # def file_to_uri(file):
+        #     if not file.startswith(endpoint):
+        #         _uri_path = v.replace(task_dir, "tasks").replace("\\", "/")
+        #         _uri_path = f"{endpoint}/{_uri_path}"
+        #     else:
+        #         _uri_path = file
+        #     return _uri_path
 
-        if "videos" in task:
-            videos = task["videos"]
-            urls = []
-            for v in videos:
-                urls.append(file_to_uri(v))
-            task["videos"] = urls
-        if "combined_videos" in task:
-            combined_videos = task["combined_videos"]
-            urls = []
-            for v in combined_videos:
-                urls.append(file_to_uri(v))
-            task["combined_videos"] = urls
+        # if "videos" in task:
+        #     videos = task["videos"]
+        #     urls = []
+        #     for v in videos:
+        #         urls.append(file_to_uri(v))
+        #     task["videos"] = urls
+        # if "combined_videos" in task:
+        #     combined_videos = task["combined_videos"]
+        #     urls = []
+        #     for v in combined_videos:
+        #         urls.append(file_to_uri(v))
+        #     task["combined_videos"] = urls
         return utils.get_response(200, task)
 
     raise HttpException(task_id=task_id, status_code=404, message=f"{request_id}: task not found")
@@ -121,12 +123,14 @@ def delete_video(request: Request, task_id: str = Path(..., description="Task ID
     request_id = base.get_task_id(request)
     task = sm.state.get_task(task_id)
     if task:
-        tasks_dir = utils.task_dir()
-        current_task_dir = os.path.join(tasks_dir, task_id)
-        if os.path.exists(current_task_dir):
-            shutil.rmtree(current_task_dir)
+        # tasks_dir = utils.task_dir()
+        # current_task_dir = os.path.join(tasks_dir, task_id)
+        # if os.path.exists(current_task_dir):
+        #     shutil.rmtree(current_task_dir)
 
         sm.state.delete_task(task_id)
+        # Delete OSS content
+        delete_resource(task_id, "video")
         logger.success(f"video deleted: {utils.to_json(task)}")
         return utils.get_response(200)
 

@@ -15,7 +15,7 @@ class ChanaRedisTaskManager(RedisTaskManager):
         self.counter = AtomicCounter()
         self.pool_size = max_concurrent_tasks
         self.max_queue_size = 16
-        #@TODO: Although MultiProcess is preferable in python world, due to the GIL in the threading.
+        # @TODO: Although MultiProcess is preferable in python world, due to the GIL in the threading.
         # We still use thread as the tasks are IO-intensive.
         # self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.pool_size)
         self.threads = []
@@ -25,12 +25,10 @@ class ChanaRedisTaskManager(RedisTaskManager):
             thread = threading.Thread(target=self.run, name=f"worker_{i}", daemon=True)
             thread.start()
             self.threads.append(thread)
-            # self.executor.submit(self.run)
-            # time.sleep(1)
         logger.success("__init__ Chana Redis Manager")
 
-    def add_task(self, func: Callable, *args: Any, **kwargs: Any) :
-        if  self.get_queue_length() < self.max_queue_size:
+    def add_task(self, func: Callable, *args: Any, **kwargs: Any):
+        if self.get_queue_length() < self.max_queue_size:
             logger.success(f"enqueue task: {func.__name__}, current_tasks: {self.current_tasks}")
             self.enqueue({"func": func, "args": args, "kwargs": kwargs})
             return True
@@ -39,7 +37,7 @@ class ChanaRedisTaskManager(RedisTaskManager):
             return False
 
     def run(self):
-        flag  = False
+        flag = False
         logger.info(f"Start thread..{threading.current_thread().name}")
         while not self.event.is_set():
             try:
@@ -81,24 +79,25 @@ class ChanaRedisTaskManager(RedisTaskManager):
 
 
 class AtomicCounter(object):
-     """An atomic, thread-safe counter"""
-     def __init__(self, initial=0):
-         """Initialize a new atomic counter to given initial value"""
-         self._value = initial
-         self._lock = threading.Lock()
-    
-     def inc(self, num=1):
-         """Atomically increment the counter by num and return the new value"""
-         with self._lock:
-             self._value += num
-             return self._value
-    
-     def dec(self, num=1):
-         """Atomically decrement the counter by num and return the new value"""
-         with self._lock:
-             self._value -= num
-             return self._value
-    
-     @property
-     def value(self):
+    """An atomic, thread-safe counter"""
+
+    def __init__(self, initial=0):
+        """Initialize a new atomic counter to given initial value"""
+        self._value = initial
+        self._lock = threading.Lock()
+
+    def inc(self, num=1):
+        """Atomically increment the counter by num and return the new value"""
+        with self._lock:
+            self._value += num
+            return self._value
+
+    def dec(self, num=1):
+        """Atomically decrement the counter by num and return the new value"""
+        with self._lock:
+            self._value -= num
+            return self._value
+
+    @property
+    def value(self):
         return self._value

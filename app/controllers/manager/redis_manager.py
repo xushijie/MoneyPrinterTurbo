@@ -8,6 +8,7 @@ from app.controllers.manager.base_manager import TaskManager
 from app.models.schema import VideoParams
 from app.services import task as tm
 from app.utils import utils
+from app.config import config
 
 FUNC_MAP = {
     'start': tm.start,
@@ -19,13 +20,12 @@ class RedisTaskManager(TaskManager):
     def __init__(self, max_concurrent_tasks: int, redis_url: str):
         self.redis_client = redis.Redis.from_url(redis_url)
         logger.success("__init__ Redis Manager")
-        self.queue_name = "task_queue"
+        self.queue_name = config.app.get("queue_name")
         super().__init__(max_concurrent_tasks)
 
     def create_queue(self):
         return self.queue_name
 
-    
     def enqueue(self, task: Dict):
         task_with_serializable_params = task.copy()
         logger.success(f'enqueue a task  {utils.to_json(task)} to redis')
@@ -55,5 +55,5 @@ class RedisTaskManager(TaskManager):
     def is_queue_empty(self):
         return self.redis_client.llen(self.queue) == 0
 
-    def get_queue_length(self)->int:
+    def get_queue_length(self) -> int:
         return self.redis_client.llen(self.queue_name)
