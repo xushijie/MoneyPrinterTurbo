@@ -46,9 +46,9 @@ jobs:
       - name: Build and push image
         run: |
           echo "push env version ${{env.TAG_VERSION}}"
-          echo "The defined TAG version:  ${{ VERSION}}"
-          docker build -t registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-${{VERSION}} .
-          docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-${{VERSION}}
+          #echo "The defined TAG version:  ${{ VERSION}}"
+          docker build -t registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-${{env.TAG_VERSION}} .
+          docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-${{env.TAG_VERSION}}
       - run: echo "🍏 This job's status is ${{ job.status }}."
 
   deploy-staging: 
