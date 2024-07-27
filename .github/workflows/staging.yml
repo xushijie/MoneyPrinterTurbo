@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build and Push
+    name: Build image and Push to register
     runs-on: ubuntu-latest
     environment: dev
     outputs:
@@ -50,17 +50,17 @@ jobs:
           docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-${{env.TAG_VERSION}}
       - run: echo "🍏 This job's status is ${{ job.status }}."
 
-  deploy-staging: 
-    name: deploy to staging environment
-    environment: dev
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: push image
-        run: |
-          echo "push version ${{env.TAG_VERSION}} to registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:"
-          docker build -t registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:${{env.TAG_VERSION}} .
-          docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-${{env.TAG_VERSION}}
+#  deploy-staging: 
+#    name: deploy to staging environment
+#    environment: dev
+#    runs-on: ubuntu-latest
+#    needs: build
+#    steps:
+#      - name: push image
+#        run: |
+#          echo "push version ${{env.TAG_VERSION}} to registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:"
+#          docker build -t registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:${{env.TAG_VERSION}} .
+#          docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-${{env.TAG_VERSION}}
 
-      - name: start to deploy to dev environment
-        run: echo "Complete."
+        #      - name: start to deploy to dev environment
+        #run: echo "Complete."
