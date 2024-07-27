@@ -46,7 +46,8 @@ jobs:
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: Build and push image
         run: |
-          echo "push version ${{env.TAG_VERSION}}"
+          echo "push env version ${{env.TAG_VERSION}}"
+          echo "The defined TAG version:  ${{ VERSIONi}}"
           docker build -t registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-${{VERSION}} .
           docker push registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-${{VERSION}}
       - run: echo "🍏 This job's status is ${{ job.status }}."

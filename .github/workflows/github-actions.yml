@@ -7,7 +7,7 @@ on:
 
 jobs:
   Dev:
-    #if: github.ref == 'refs/heads/dev' && startsWith(github.ref, 'refs/tags/v')
+    if: 1== 0  &&  github.ref == 'refs/heads/main' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment: dev
     steps:
