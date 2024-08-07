@@ -9,13 +9,13 @@ ENDPOINT = config.oss.get('end_point', 'https://oss-cn-beijing.aliyuncs.com')
 BUCKET_NAME = config.oss.get('bucket', 'chana-video')
 
 DIR_MAPPING = {
-    "video": "video",
+    "video": "generated",
     "material_music": "materials/music",
     "material_video": "materials/video",
     "material_image": "materials/image"
 }
 
-def push_data_to_oss(file_path, object_name, type):
+def push_data_to_oss(file_path, object_name, type="video"):
     """
     Uploads a file to Alibaba Cloud OSS.
 
@@ -85,7 +85,7 @@ def get_target(target: str, type: str):
 
 # Example usage
 if __name__ == "__main__":
-    local_file_path = 'path/to/your/local/file.txt'  # Replace with the path to your local file
-    oss_object_name = 'your-oss-object-name.txt'    # Replace with the desired name in OSS
+    local_file_path = '/work/python/MoneyPrinterTurbo/storage/tasks/010fea67-e39b-4044-8df3-6ffe9a460bb7/final-1.mp4'  # Replace with the path to your local file
+    oss_object_name = '010fea67-e39b-4044-8df3-6ffe9a460bb7.mp4'    # Replace with the desired name in OSS
 
     push_data_to_oss(local_file_path, oss_object_name)

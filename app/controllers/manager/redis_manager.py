@@ -38,6 +38,7 @@ class RedisTaskManager(TaskManager):
         self.redis_client.rpush(self.queue, json.dumps(task_with_serializable_params))
 
     def dequeue(self):
+        #logger.success(f"Quue name {self.queue}")
         task_json = self.redis_client.lpop(self.queue)
 
         if task_json:

@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from app.config import config
 from app.models import const
 
-
 # Base class for state management
 class BaseState(ABC):
 
@@ -66,9 +65,11 @@ class RedisState(BaseState):
             **kwargs,
         }
 
-        # @TODO  Using a single redis instruction.
-        for field, value in fields.items():
-            self._redis.hset(task_id, field, str(value))
+        self._redis.hset(name=task_id, mapping = fields)
+        self.expire(task_id)
+        # # @TODO  Using a single redis instruction.
+        # for field, value in fields.items():
+        #     self._redis.hset(task_id, field, str(value))
 
     def get_task(self, task_id: str):
         task_data = self._redis.hgetall(task_id)
@@ -79,7 +80,7 @@ class RedisState(BaseState):
         return task
     
     def expire(self, task_id: str):
-        self._redis.expire(task_id, 3600*3)
+        self._redis.expire(task_id, const.REDIS_TTL)
 
     
     def delete_task(self, task_id: str):

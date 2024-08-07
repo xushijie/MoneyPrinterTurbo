@@ -198,13 +198,21 @@ def start(task_id, params: VideoParams):
 
     logger.success(f"task {task_id} finished, generated {len(final_video_paths)} videos.")
 
+    # {'state': 1, 'progress': 100, 'videos': ['/work/python/MoneyPrinterTurbo/storage/tasks/fb5fc479-fd7d-40e7-be2a-8d177444c88e/final-1.mp4'], 'combined_videos': ['/work/python/MoneyPrinterTurbo/storage/tasks/fb5fc479-fd7d-40e7-be2a-8d177444c88e/combined-1.mp4'], 'end_time': '2024-08-07 20:29:26'}
     kwargs = {
         "videos": final_video_paths,
         "combined_videos": combined_video_paths,
         "end_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     }
-    sm.state.update_task(task_id, state=const.TASK_STATE_COMPLETE, progress=100, **kwargs)
+    ###################
+    # @TODO To overcome  Invalid input of type: 'list'. Convert to a bytes, string, int or...
+    # 后续再优化吧
+    tmp = kwargs.copy()
+    tmp["videos"] = str(kwargs["videos"])
+    tmp["combined_videos"] = str(kwargs["combined_videos"])
+    sm.state.update_task(task_id, state=const.TASK_STATE_COMPLETE, progress=100, **tmp)
+    ##################
     kwargs['cached_videos'] = downloaded_videos
     # Will expire after 3 hours
     sm.state.expire(task_id)

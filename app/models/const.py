@@ -9,3 +9,5 @@ TASK_STATE_PROCESSING = 4
 
 FILE_TYPE_VIDEOS = ['mp4', 'mov', 'mkv', 'webm']
 FILE_TYPE_IMAGES = ['jpg', 'jpeg', 'png', 'bmp']
+
+REDIS_TTL = 3600*2

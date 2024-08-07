@@ -42,21 +42,6 @@ else:
     logger.success(f"init InMemory Task Manager...")
     task_manager = InMemoryTaskManager(max_concurrent_tasks=_max_concurrent_tasks)
 
-# @router.post("/videos-test", response_model=TaskResponse, summary="Generate a short video")
-# async def create_video_test(request: Request, body: TaskVideoRequest):
-#     task_id = utils.get_uuid()
-#     request_id = base.get_task_id(request)
-#     try:
-#         task = {
-#             "task_id": task_id,
-#             "request_id": request_id,
-#             "params": body.dict(),
-#         }
-#         task_manager.add_task(tm.start_test, task_id=task_id, params=body)
-#         return utils.get_response(200, task)
-#     except ValueError as e:
-#         raise HttpException(task_id=task_id, status_code=400, message=f"{request_id}: {str(e)}")
-
 
 @router.post("/videos", response_model=TaskResponse, summary="Generate a short video")
 def create_video(background_tasks: BackgroundTasks, request: Request, body: TaskVideoRequest):
