@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     git \
     imagemagick \
     ffmpeg \
-    curl vi iputils-ping redis-tools\
+    curl vim iputils-ping redis-tools\
     && rm -rf /var/lib/apt/lists/*
 
 # Fix security policy for ImageMagick
