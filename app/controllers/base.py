@@ -12,6 +12,9 @@ def get_task_id(request: Request):
         task_id = uuid4()
     return str(task_id)
 
+def get_user_id(request: Request):
+    user_id = request.headers.get('user-id')
+    return str(user_id)
 
 def get_api_key(request: Request):
     api_key = request.headers.get('x-api-key')

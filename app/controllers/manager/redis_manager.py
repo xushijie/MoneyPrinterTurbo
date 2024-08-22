@@ -49,6 +49,7 @@ class RedisTaskManager(TaskManager):
 
             if 'params' in task_info['kwargs'] and isinstance(task_info['kwargs']['params'], dict):
                 task_info['kwargs']['params'] = VideoParams(**task_info['kwargs']['params'])
+                task_info['user_id'] = task_info['kwargs']['params'].user_id
 
             return task_info
         return None

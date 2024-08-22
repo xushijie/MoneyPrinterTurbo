@@ -123,6 +123,7 @@ class VideoParams(BaseModel):
     stroke_width: float = 1.5
     n_threads: Optional[int] = 2
     paragraph_number: Optional[int] = 1
+    user_id: Optional[str] =""
 
 
 class VideoScriptParams:

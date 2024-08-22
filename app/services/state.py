@@ -71,6 +71,7 @@ class RedisState(BaseState):
         # for field, value in fields.items():
         #     self._redis.hset(task_id, field, str(value))
 
+
     def get_task(self, task_id: str):
         task_data = self._redis.hgetall(task_id)
         if not task_data:

@@ -7,7 +7,8 @@ from app.controllers.manager.redis_manager import RedisTaskManager
 from app.services import oss
 from app.utils import utils
 from app.config import config
-
+from app.services import state as sm
+from app.models import const
 
 class ChanaRedisTaskManager(RedisTaskManager):
     def __init__(self, max_concurrent_tasks: int, redis_url: str):
@@ -47,7 +48,8 @@ class ChanaRedisTaskManager(RedisTaskManager):
                     self.counter.inc()
                     logger.info(f"Scedule to run the task:  {task_info['kwargs']['task_id']}")
                     kwargs = task_info['func'](*task_info['args'], **task_info['kwargs'])
-                    self.post_process(task_info['kwargs']['task_id'], kwargs)
+                    user_id = task_info['user_id']
+                    self.post_process(task_info['kwargs']['task_id'], user_id, kwargs)
                 time.sleep(1)
             except Exception as e:
                 logger.exception(f"Caught an exception: {task_info['kwargs']['task_id']}, {e}")
@@ -58,7 +60,7 @@ class ChanaRedisTaskManager(RedisTaskManager):
 
         logger.info("Finish thread")
 
-    def post_process(self, task_id, kargs):
+    def post_process(self, task_id, user_id, kargs):
         """
         POST process a video and push it to the S3.
         {
@@ -68,8 +70,15 @@ class ChanaRedisTaskManager(RedisTaskManager):
         }
         """
         final_videos = kargs.get("videos", [])
+        oss_paths = []
         for i, final_video in enumerate(final_videos):
-            oss.push_data_to_oss(final_video, f"{task_id}_{i}.mp4", 'video')
+            path = oss.push_data_to_oss(final_video, f"{task_id}_{i}.mp4", user_id, 'video')
+            oss_paths.append(path)
+
+        tmp = {
+            "oss_final": str(oss_paths)
+        }
+        sm.state.update_task(task_id, state=const.TASK_COMPLETE, progress=100, **tmp)
 
         # @TODO  The local storage purge for `combined_videos` is DEFERRED here
         cached_videos = kargs.get('cached_videos', [])

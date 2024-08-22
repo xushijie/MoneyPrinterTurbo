@@ -211,7 +211,7 @@ def start(task_id, params: VideoParams):
     tmp = kwargs.copy()
     tmp["videos"] = str(kwargs["videos"])
     tmp["combined_videos"] = str(kwargs["combined_videos"])
-    sm.state.update_task(task_id, state=const.TASK_STATE_COMPLETE, progress=100, **tmp)
+    sm.state.update_task(task_id, state=const.TASK_STATE_COMPLETE, progress=98, **tmp)
     ##################
     kwargs['cached_videos'] = downloaded_videos
     # Will expire after 3 hours
