@@ -10,7 +10,8 @@ from loguru import logger
 from app.config import config
 from app.models import const
 from app.models.schema import VideoParams, VideoConcatMode
-from app.services import llm, material, voice, video, subtitle
+from app.services import llm, material, voice, subtitle
+from app.services.chanaVideo import video
 from app.services import state as sm
 from app.utils import utils
 
@@ -127,19 +128,21 @@ def start(task_id, params: VideoParams):
     sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=40)
 
     downloaded_videos = []
-    if params.video_source == "local":
-        logger.info("\n\n## preprocess local materials")
-        materials = video.preprocess_video(materials=params.video_materials, clip_duration=max_clip_duration)
-        print(materials)
 
+    if params.video_source == "local" or params.video_source == "mixed":
+        # 针对传过来的是 本地路径。
+        logger.info("\n\n## preprocess local materials")
+        materials = video.preprocess_video(materials=params.video_materials, clip_duration=max_clip_duration, task_id=task_id)
+       
         if not materials:
             sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
             logger.error("no valid materials found, please check the materials and try again.")
-            return
+            # return
         for material_info in materials:
             print(material_info)
             downloaded_videos.append(material_info.url)
-    else:
+
+    if params.video_source!= 'local':
         logger.info(f"\n\n## downloading videos from {params.video_source}")
         downloaded_videos = material.download_videos(task_id=task_id,
                                                      search_terms=video_terms,
@@ -197,11 +200,12 @@ def start(task_id, params: VideoParams):
         combined_video_paths.append(combined_video_path)
 
     logger.success(f"task {task_id} finished, generated {len(final_video_paths)} videos.")
-
+    screenshot = video.extract_screenshot(final_video_paths[0])
     # {'state': 1, 'progress': 100, 'videos': ['/work/python/MoneyPrinterTurbo/storage/tasks/fb5fc479-fd7d-40e7-be2a-8d177444c88e/final-1.mp4'], 'combined_videos': ['/work/python/MoneyPrinterTurbo/storage/tasks/fb5fc479-fd7d-40e7-be2a-8d177444c88e/combined-1.mp4'], 'end_time': '2024-08-07 20:29:26'}
     kwargs = {
         "videos": final_video_paths,
         "combined_videos": combined_video_paths,
+        "screenshot": screenshot,
         "end_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     }

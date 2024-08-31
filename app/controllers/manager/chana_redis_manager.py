@@ -66,6 +66,7 @@ class ChanaRedisTaskManager(RedisTaskManager):
         {
              "videos": final_video_paths,
              "combined_videos": combined_video_paths,
+             "screenshot": screenshot_path,
              "end_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         """
@@ -75,8 +76,12 @@ class ChanaRedisTaskManager(RedisTaskManager):
             path = oss.push_data_to_oss(final_video, f"{task_id}_{i}.mp4", user_id, 'video')
             oss_paths.append(path)
 
+        scrshot = kargs.get('screenshot')
+        screenshot_path = oss.push_data_to_oss(scrshot, f"{task_id}_screenshot.png", user_id, 'video')
+
         tmp = {
-            "oss_final": str(oss_paths)
+            "oss_final": str(oss_paths),
+            "screenshot_final": screenshot_path
         }
         sm.state.update_task(task_id, state=const.TASK_COMPLETE, progress=100, **tmp)
 

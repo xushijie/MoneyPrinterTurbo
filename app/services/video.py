@@ -324,12 +324,12 @@ def preprocess_video(materials: List[MaterialInfo], clip_duration=4):
     return materials
 
 
-if __name__ == "__main__":
-    m = MaterialInfo()
-    m.url = "/Users/harry/Downloads/IMG_2915.JPG"
-    m.provider = "local"
-    materials = preprocess_video([m], clip_duration=4)
-    print(materials)
+# if __name__ == "__main__":
+#     m = MaterialInfo()
+#     m.url = "/Users/harry/Downloads/IMG_2915.JPG"
+#     m.provider = "local"
+#     materials = preprocess_video([m], clip_duration=4)
+#     print(materials)
 
     # txt_en = "Here's your guide to travel hacks for budget-friendly adventures"
     # txt_zh = "测试长字段这是您的旅行技巧指南帮助您进行预算友好的冒险"
