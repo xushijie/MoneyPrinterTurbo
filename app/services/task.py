@@ -48,8 +48,9 @@ def start(task_id, params: VideoParams):
         logger.debug(f"video script: \n{video_script}")
 
     if not video_script:
-        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
-        logger.error("failed to generate video script.")
+        message = "failed to generate video script."
+        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=10, message=message)
+        logger.error(message)
         return
 
     sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=10)
@@ -69,7 +70,8 @@ def start(task_id, params: VideoParams):
         logger.debug(f"video terms: {utils.to_json(video_terms)}")
 
     if not video_terms:
-        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
+        message = "failed to generate video terms."
+        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=20, message = message)
         logger.error("failed to generate video terms.")
         return
 
@@ -89,13 +91,13 @@ def start(task_id, params: VideoParams):
     audio_file = path.join(utils.task_dir(task_id), f"audio.mp3")
     sub_maker = voice.tts(text=video_script, voice_name=voice_name, voice_file=audio_file)
     if sub_maker is None:
-        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
-        logger.error(
-            """failed to generate audio:
+        message =             """failed to generate audio:
 1. check if the language of the voice matches the language of the video script.
 2. check if the network is available. If you are in China, it is recommended to use a VPN and enable the global traffic mode.
         """.strip()
-        )
+
+        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=30, message = message)
+        logger.error(message)
         return
 
     audio_duration = voice.get_audio_duration(sub_maker)
@@ -164,9 +166,9 @@ def start(task_id, params: VideoParams):
                                                      ))
     if not downloaded_videos:
         # 终于Fail了
-        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
-        logger.error(
-            "failed to download videos, maybe the network is not available. if you are in China, please use a VPN.")
+        message = "failed to download videos, maybe the network is not available. if you are in China, please use a VPN."
+        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=50, message=message)
+        logger.error(message)
         return
 
     sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=50)
