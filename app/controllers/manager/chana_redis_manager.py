@@ -2,6 +2,7 @@ import time
 import threading
 from loguru import logger
 from typing import Callable, Any, Dict
+import multiprocessing
 
 from app.controllers.manager.redis_manager import RedisTaskManager
 from app.services import oss
@@ -10,23 +11,37 @@ from app.config import config
 from app.services import state as sm
 from app.models import const
 
+
 class ChanaRedisTaskManager(RedisTaskManager):
     def __init__(self, max_concurrent_tasks: int, redis_url: str):
         super().__init__(max_concurrent_tasks, redis_url)
         self.counter = AtomicCounter()
         self.pool_size = max_concurrent_tasks
-        self.max_queue_size = 16
-        # @TODO: Although MultiProcess is preferable in python world, due to the GIL in the threading.
-        # We still use thread as the tasks are IO-intensive.
-        # self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.pool_size)
-        self.threads = []
-        self.event = threading.Event()
-
+        self.max_queue_size = 32
+       
+        self.processes = []
         for i in range(self.pool_size):
-            thread = threading.Thread(target=self.run, name=f"worker_{i}", daemon=True)
-            thread.start()
-            self.threads.append(thread)
+            process = multiprocessing.Process(target=self.run, name=f"chana_video_worker_{i}")
+            process.start()
+            self.processes.append(process)
+        self.start_process_monitor()
         logger.success("__init__ Chana Redis Manager")
+
+    def monitor_processes(self):
+        while True:
+            for process in self.processes:
+                if not process.is_alive():
+                    logger.info(f"Process {process.name} is not alive, relaunching...")
+                    new_process = multiprocessing.Process(target=self.run, name=process.name)
+                    new_process.start()
+                    self.processes[self.processes.index(process)] = new_process
+            time.sleep(5)  # Check every 5 seconds
+
+    def start_process_monitor(self):
+        monitor_thread = threading.Thread(target=self.monitor_processes)
+        monitor_thread.daemon = True  # Set as daemon thread to ensure it runs in the background
+        monitor_thread.start()
+        logger.info("Process monitor started")
 
     def add_task(self, func: Callable, *args: Any, **kwargs: Any):
         if self.get_queue_length() < self.max_queue_size:
@@ -39,8 +54,9 @@ class ChanaRedisTaskManager(RedisTaskManager):
 
     def run(self):
         flag = False
-        logger.info(f"Start thread..{threading.current_thread().name}")
-        while not self.event.is_set():
+        logger.info(f"Start process..{multiprocessing.current_process().name}")
+        self.event = threading.Event()
+        while not self.event.is_set() and multiprocessing.parent_process() is not None:
             try:
                 task_info = self.dequeue()
                 if task_info:

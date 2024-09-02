@@ -108,7 +108,7 @@ def combine_videos(combined_video_path: str,
                         clip_resized.set_position("center")
                     ])
 
-                logger.info(f"resizing video to {video_width} x {video_height}, clip size: {clip_w} x {clip_h}")
+                logger.info(f"current state ({video_duration}-{clip.duration}): resizing video to {video_width} x {video_height}, clip size: {clip_w} x {clip_h}")
 
             if clip.duration > max_clip_duration:
                 clip = clip.subclip(0, max_clip_duration)
@@ -120,6 +120,7 @@ def combine_videos(combined_video_path: str,
     video_clip = video_clip.set_fps(30)
     logger.info(f"writing")
     # https://github.com/harry0703/MoneyPrinterTurbo/issues/111#issuecomment-2032354030
+    logger.info(f"Parameters: combined_video_path={combined_video_path}, threads={threads}, audio_codec='aac', temp_audiofile_path={output_dir}, fps=30")
     video_clip.write_videofile(filename=combined_video_path,
                                threads=threads,
                                logger=None,

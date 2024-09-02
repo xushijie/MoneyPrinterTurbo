@@ -423,3 +423,6 @@ Then in you action, you can do something like
     [ "$YOUR_ENVIRONMENT" = qa ] && echo $QA_ENV_FILE | base64 --decode > .env
     [ "$YOUR_ENVIRONMENT" = prod ] && echo $PROD_ENV_FILE | base64 --decode > .env
 
+## 本地docker 启动
+docker pull registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-v2.0.25
+docker run -p 8080:8080 --name moneyPrinterTurbov-2.0.25 -v ./config.toml:/MoneyPrinterTurbo/config.toml -v /tmp/test:/MoneyPrinterTurbo/storage registry.cn-beijing.aliyuncs.com/chana/moneyprinterturbo:dev-v2.0.21

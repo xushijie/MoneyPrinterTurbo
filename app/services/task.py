@@ -129,30 +129,41 @@ def start(task_id, params: VideoParams):
 
     downloaded_videos = []
 
+    # Define local, mixed, and ai for video_source
+    # local: 自有素材
+    # mixed: The video source is a mix of local and remote paths.
+    # ai: 其他互联网素材源头, 目前使用pexels和pexeably
     if params.video_source == "local" or params.video_source == "mixed":
         # 针对传过来的是 本地路径。
         logger.info("\n\n## preprocess local materials")
-        materials = video.preprocess_video(materials=params.video_materials, clip_duration=max_clip_duration, task_id=task_id)
-       
-        if not materials:
-            sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
-            logger.error("no valid materials found, please check the materials and try again.")
+        
+        try:
+            materials, exceptions = video.preprocess_video(materials=params.video_materials, clip_duration=max_clip_duration, task_id=task_id)
+            for material_info in materials:
+                print(material_info)
+                downloaded_videos.append(material_info.url)
+            # 此时状态应该还是 PROCESSING
+            if exceptions:
+                sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=40, message=str(exceptions))
+            
+        except Exception as e:
+            sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=40, message=str(e))
+            logger.error(f"Exception occurred during video preprocessing: {str(e)}")
+            
             # return
-        for material_info in materials:
-            print(material_info)
-            downloaded_videos.append(material_info.url)
-
-    if params.video_source!= 'local':
+        
+    if params.video_source != 'local':
         logger.info(f"\n\n## downloading videos from {params.video_source}")
-        downloaded_videos = material.download_videos(task_id=task_id,
+        downloaded_videos = downloaded_videos + (material.download_videos(task_id=task_id,
                                                      search_terms=video_terms,
                                                      source=params.video_source,
                                                      video_aspect=params.video_aspect,
                                                      video_contact_mode=params.video_concat_mode,
                                                      audio_duration=audio_duration * params.video_count,
                                                      max_clip_duration=max_clip_duration,
-                                                     )
+                                                     ))
     if not downloaded_videos:
+        # 终于Fail了
         sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
         logger.error(
             "failed to download videos, maybe the network is not available. if you are in China, please use a VPN.")

@@ -50,10 +50,11 @@ def search_videos_pexels(search_term: str,
     query_url = f"https://api.pexels.com/videos/search?{urlencode(params)}"
     logger.info(f"searching videos: {query_url}, with proxies: {config.proxy}")
 
+    video_items = []
     try:
         r = requests.get(query_url, headers=headers, proxies=config.proxy, verify=False, timeout=(30, 60))
         response = r.json()
-        video_items = []
+        
         if "videos" not in response:
             logger.error(f"search videos failed: {response}")
             return video_items
@@ -78,9 +79,9 @@ def search_videos_pexels(search_term: str,
                     break
         return video_items
     except Exception as e:
-        logger.error(f"search videos failed: {str(e)}")
+        logger.error(f"search videos from pexels failed: {str(e)}")
 
-    return []
+    return video_items
 
 
 def search_videos_pixabay(search_term: str,
@@ -185,21 +186,27 @@ def download_videos(task_id: str,
     valid_video_items = []
     valid_video_urls = []
     found_duration = 0.0
-    search_videos = search_videos_pexels
-    if source == "pixabay":
-        search_videos = search_videos_pixabay
-
-    for search_term in search_terms:
-        video_items = search_videos(search_term=search_term,
-                                    minimum_duration=max_clip_duration,
-                                    video_aspect=video_aspect)
-        logger.info(f"found {len(video_items)} videos for '{search_term}'")
-
-        for item in video_items:
-            if item.url not in valid_video_urls:
-                valid_video_items.append(item)
-                valid_video_urls.append(item.url)
-                found_duration += item.duration
+    # search_videos = search_videos_pexels
+    # if source == "pixabay":
+    #     search_videos = search_videos_pixabay
+    flag = False
+    for search_videos in [search_videos_pexels, search_videos_pixabay]:
+        if flag: 
+            break
+        for search_term in search_terms:
+            video_items = search_videos(search_term=search_term,
+                                        minimum_duration=max_clip_duration,
+                                        video_aspect=video_aspect)
+            logger.info(f"found {len(video_items)} videos for '{search_term}'")
+            if video_items:
+                flag = True
+            for item in video_items:
+                if item.url not in valid_video_urls:
+                    valid_video_items.append(item)
+                    valid_video_urls.append(item.url)
+                    found_duration += item.duration
+                    if len(valid_video_items) > 10:
+                        break
 
     logger.info(
         f"found total videos: {len(valid_video_items)}, required duration: {audio_duration} seconds, found duration: {found_duration} seconds")
