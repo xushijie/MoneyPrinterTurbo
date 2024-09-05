@@ -21,6 +21,7 @@ from app.services import task as tm
 from app.services import state as sm
 from app.utils import utils
 from app.services.oss import delete_resource
+from app.models import const
 # 认证依赖项
 # router = new_router(dependencies=[Depends(base.verify_token)])
 router = new_router()
@@ -60,7 +61,7 @@ def create_video(background_tasks: BackgroundTasks, request: Request, body: Task
 
         params = body.dict()
         params['user_id'] = user_id
-        sm.state.update_task(task_id, start=datetime.now().strftime("%Y-%m-%d %H:%M:%S"), user_id= user_id
+        sm.state.update_task(task_id, state=const.TASK_QUEUING, start_queuing_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"), user_id= user_id
                              )
         # background_tasks.add_task(tm.start, task_id=task_id, params=body)
         result = task_manager.add_task(tm.start, task_id=task_id, params=params)

@@ -31,7 +31,7 @@ def start(task_id, params: VideoParams):
     }
     """
     logger.info(f"start task: {task_id}")
-    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=5)
+    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=5, start_processing_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     video_subject = params.video_subject
     voice_name = voice.parse_voice_name(params.voice_name)
@@ -49,7 +49,7 @@ def start(task_id, params: VideoParams):
 
     if not video_script:
         message = "failed to generate video script."
-        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=10, message=message)
+        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=10, message=message, end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         logger.error(message)
         return
 
@@ -71,7 +71,7 @@ def start(task_id, params: VideoParams):
 
     if not video_terms:
         message = "failed to generate video terms."
-        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=20, message = message)
+        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=20, message = message, end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         logger.error("failed to generate video terms.")
         return
 
@@ -96,7 +96,7 @@ def start(task_id, params: VideoParams):
 2. check if the network is available. If you are in China, it is recommended to use a VPN and enable the global traffic mode.
         """.strip()
 
-        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=30, message = message)
+        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=30, message = message, end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         logger.error(message)
         return
 
@@ -167,7 +167,7 @@ def start(task_id, params: VideoParams):
     if not downloaded_videos:
         # 终于Fail了
         message = "failed to download videos, maybe the network is not available. if you are in China, please use a VPN."
-        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=50, message=message)
+        sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=50, message=message, end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         logger.error(message)
         return
 

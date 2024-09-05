@@ -81,7 +81,7 @@ class RedisState(BaseState):
         return task
     
     def expire(self, task_id: str):
-        self._redis.expire(task_id, const.REDIS_TTL)
+        self._redis.expire(task_id, _redis_ttl*3600)
 
     
     def delete_task(self, task_id: str):
@@ -113,5 +113,6 @@ _redis_host = config.app.get("redis_host", "localhost")
 _redis_port = config.app.get("redis_port", 6379)
 _redis_db = config.app.get("redis_db", 0)
 _redis_password = config.app.get("redis_password", None)
+_redis_ttl = config.app.get('redis_ttl', 3)
 
 state = RedisState(host=_redis_host, port=_redis_port, db=_redis_db, password=_redis_password) if _enable_redis else MemoryState()

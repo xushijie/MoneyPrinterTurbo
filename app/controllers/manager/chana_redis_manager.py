@@ -3,6 +3,7 @@ import threading
 from loguru import logger
 from typing import Callable, Any, Dict
 import multiprocessing
+from datetime import datetime
 
 from app.controllers.manager.redis_manager import RedisTaskManager
 from app.services import oss
@@ -97,7 +98,8 @@ class ChanaRedisTaskManager(RedisTaskManager):
 
         tmp = {
             "oss_final": str(oss_paths),
-            "screenshot_final": screenshot_path
+            "screenshot_final": screenshot_path,
+            'end_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         sm.state.update_task(task_id, state=const.TASK_COMPLETE, progress=100, **tmp)
 
