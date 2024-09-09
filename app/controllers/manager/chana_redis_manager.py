@@ -25,7 +25,7 @@ class ChanaRedisTaskManager(RedisTaskManager):
             process = multiprocessing.Process(target=self.run, name=f"chana_video_worker_{i}")
             process.start()
             self.processes.append(process)
-        self.start_process_monitor()
+        #self.start_process_monitor()
         logger.success("__init__ Chana Redis Manager")
 
     def monitor_processes(self):
