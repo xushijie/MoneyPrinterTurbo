@@ -39,7 +39,8 @@ def search_videos_pexels(search_term: str,
     video_width, video_height = aspect.to_resolution()
     api_key = get_api_key("pexels_api_keys")
     headers = {
-        "Authorization": api_key
+        "Authorization": api_key,
+        "user-agent": "curl/7.81.0"  
     }
     # Build URL
     params = {
@@ -48,13 +49,14 @@ def search_videos_pexels(search_term: str,
         "orientation": video_orientation
     }
     query_url = f"https://api.pexels.com/videos/search?{urlencode(params)}"
-    logger.info(f"searching videos: {query_url}, with proxies: {config.proxy}")
+    logger.info(f"searching videos: {query_url}, with proxies: {config.proxy} and key: {api_key}")
 
     video_items = []
     try:
         r = requests.get(query_url, headers=headers, proxies=config.proxy, verify=False, timeout=(30, 60))
+        logger.info(f"1... {r}")
         response = r.json()
-        
+
         if "videos" not in response:
             logger.error(f"search videos failed: {response}")
             return video_items
