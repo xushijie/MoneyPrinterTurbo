@@ -46,7 +46,8 @@ def search_videos_pexels(search_term: str,
     params = {
         "query": search_term,
         "per_page": 20,
-        "orientation": video_orientation
+        "orientation": video_orientation,
+        "locale": "zh-CN"
     }
     query_url = f"https://api.pexels.com/videos/search?{urlencode(params)}"
     logger.info(f"searching videos: {query_url}, with proxies: {config.proxy} and key: {api_key}")
@@ -156,9 +157,13 @@ def save_video(video_url: str, save_dir: str = "") -> str:
         logger.info(f"video already exists: {video_path}")
         return video_path
 
-    # if video does not exist, download it
+   
     with open(video_path, "wb") as f:
-        f.write(requests.get(video_url, proxies=config.proxy, verify=False, timeout=(60, 240)).content)
+        if "pexels" in video_url:
+            headers = {"user-agent": "curl/7.81.0"}
+            f.write(requests.get(video_url, headers=headers, proxies=config.proxy, verify=False, timeout=(60, 240)).content)
+        else:
+            f.write(requests.get(video_url, proxies=config.proxy, verify=False, timeout=(60, 240)).content)
 
     if os.path.exists(video_path) and os.path.getsize(video_path) > 0:
         try:
