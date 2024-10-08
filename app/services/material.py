@@ -66,7 +66,7 @@ def search_videos_pexels(search_term: str,
         for v in videos:
             duration = v["duration"]
             # check if video has desired minimum duration
-            if duration < minimum_duration:
+            if duration < minimum_duration or duration > 20:
                 continue
             video_files = v["video_files"]
             # loop through each url to determine the best quality
@@ -140,7 +140,7 @@ def search_videos_pixabay(search_term: str,
     return []
 
 
-def save_video(video_url: str, save_dir: str = "") -> str:
+async def save_video(video_url: str, save_dir: str = "") -> str:
     if not save_dir:
         save_dir = utils.storage_dir("cache_videos")
 
@@ -182,7 +182,7 @@ def save_video(video_url: str, save_dir: str = "") -> str:
     return ""
 
 
-def download_videos(task_id: str,
+async def download_videos(task_id: str,
                     search_terms: List[str],
                     source: str = "pexels",
                     video_aspect: VideoAspect = VideoAspect.portrait,
@@ -232,7 +232,7 @@ def download_videos(task_id: str,
     for item in valid_video_items:
         try:
             logger.info(f"downloading video: {item.url}")
-            saved_video_path = save_video(video_url=item.url, save_dir=material_directory)
+            saved_video_path = await save_video(video_url=item.url, save_dir=material_directory)
             if saved_video_path:
                 logger.info(f"video saved: {saved_video_path}")
                 video_paths.append(saved_video_path)

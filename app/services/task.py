@@ -1,6 +1,7 @@
 import math
 import os.path
 import re
+import asyncio
 from datetime import datetime
 from os import path
 
@@ -14,6 +15,8 @@ from app.services import llm, material, voice, subtitle
 from app.services.chanaVideo import video
 from app.services import state as sm
 from app.utils import utils
+
+
 
 
 def start(task_id, params: VideoParams):
@@ -156,14 +159,14 @@ def start(task_id, params: VideoParams):
         
     if params.video_source != 'local':
         logger.info(f"\n\n## downloading videos from {params.video_source}")
-        downloaded_videos = downloaded_videos + (material.download_videos(task_id=task_id,
+        downloaded_videos = downloaded_videos + (asyncio.run(material.download_videos(task_id=task_id,
                                                      search_terms=video_terms,
                                                      source=params.video_source,
                                                      video_aspect=params.video_aspect,
                                                      video_contact_mode=params.video_concat_mode,
                                                      audio_duration=audio_duration * params.video_count,
                                                      max_clip_duration=max_clip_duration,
-                                                     ))
+                                                     )))
     if not downloaded_videos:
         # 终于Fail了
         message = "failed to download videos, maybe the network is not available. if you are in China, please use a VPN."
