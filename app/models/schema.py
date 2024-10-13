@@ -90,7 +90,8 @@ class VideoParams(BaseModel):
       "text_color": "#FFFFFF",
       "font_size": 60,
       "stroke_color": "#000000",
-      "stroke_width": 1.5
+      "stroke_width": 1.5,
+      "style":""
     }
     """
     video_subject: str
@@ -124,6 +125,7 @@ class VideoParams(BaseModel):
     n_threads: Optional[int] = 2
     paragraph_number: Optional[int] = 1
     user_id: Optional[str] =""
+    style: Optional[str] = None
 
 
 class VideoScriptParams:

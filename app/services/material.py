@@ -33,6 +33,8 @@ def get_api_key(cfg_key: str):
 def search_videos_pexels(search_term: str,
                          minimum_duration: int,
                          video_aspect: VideoAspect = VideoAspect.portrait,
+                         style: str = None, 
+                         category: str = None
                          ) -> List[MaterialInfo]:
     aspect = VideoAspect(video_aspect)
     video_orientation = aspect.name
@@ -90,6 +92,8 @@ def search_videos_pexels(search_term: str,
 def search_videos_pixabay(search_term: str,
                           minimum_duration: int,
                           video_aspect: VideoAspect = VideoAspect.portrait,
+                          style: str="all",
+                          category: str = None
                           ) -> List[MaterialInfo]:
     aspect = VideoAspect(video_aspect)
 
@@ -99,9 +103,13 @@ def search_videos_pixabay(search_term: str,
     # Build URL
     params = {
         "q": search_term,
-        "video_type": "all",  # Accepted values: "all", "film", "animation"
         "per_page": 50,
-        "key": api_key
+        "key": api_key,
+        "video_type": style,   # all, film, animation
+        "category": category, # Accepted values: backgrounds, fashion, nature, science, education, feelings, 
+                            # health, people, religion, places, animals, industry, computer, food, sports, 
+                            # #transportation, travel, buildings, business, music
+        "lang": "zh"
     }
     query_url = f"https://pixabay.com/api/videos/?{urlencode(params)}"
     logger.info(f"searching videos: {query_url}, with proxies: {config.proxy}")
@@ -184,6 +192,8 @@ async def save_video(video_url: str, save_dir: str = "") -> str:
 
 async def download_videos(task_id: str,
                     search_terms: List[str],
+                    category: str = None,
+                    style: str = None,
                     source: str = "pexels",
                     video_aspect: VideoAspect = VideoAspect.portrait,
                     video_contact_mode: VideoConcatMode = VideoConcatMode.random,
@@ -193,27 +203,27 @@ async def download_videos(task_id: str,
     valid_video_items = []
     valid_video_urls = []
     found_duration = 0.0
-    # search_videos = search_videos_pexels
-    # if source == "pixabay":
-    #     search_videos = search_videos_pixabay
-    flag = False
-    for search_videos in [search_videos_pexels, search_videos_pixabay]:
-        if flag: 
-            break
-        for search_term in search_terms:
-            video_items = search_videos(search_term=search_term,
-                                        minimum_duration=max_clip_duration,
-                                        video_aspect=video_aspect)
-            logger.info(f"found {len(video_items)} videos for '{search_term}'")
-            if video_items:
-                flag = True
-            for item in video_items:
-                if item.url not in valid_video_urls:
-                    valid_video_items.append(item)
-                    valid_video_urls.append(item.url)
-                    found_duration += item.duration
-                    if len(valid_video_items) > 10:
-                        break
+    if style is None:
+        search_videos = search_videos_pexels
+        if category:
+            search_terms.append(category)
+    else:
+        search_videos = search_videos_pixabay
+    
+    for search_term in search_terms:
+        video_items = search_videos(search_term=search_term,
+                                    minimum_duration=max_clip_duration,
+                                    video_aspect=video_aspect,
+                                    style=style if search_videos == search_videos_pixabay else None,
+                                    category=category)
+        logger.info(f"found {len(video_items)} videos for '{search_term}'")
+        for item in video_items:
+            if item.url not in valid_video_urls:
+                valid_video_items.append(item)
+                valid_video_urls.append(item.url)
+                found_duration += item.duration
+                if len(valid_video_items) > 10:
+                    break
 
     logger.info(
         f"found total videos: {len(valid_video_items)}, required duration: {audio_duration} seconds, found duration: {found_duration} seconds")

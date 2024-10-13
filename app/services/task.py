@@ -17,8 +17,6 @@ from app.services import state as sm
 from app.utils import utils
 
 
-
-
 def start(task_id, params: VideoParams):
     """
     {
@@ -30,7 +28,8 @@ def start(task_id, params: VideoParams):
         "text_color": "#FFFFFF",
         "font_size": 60,
         "stroke_color": "#000000",
-        "stroke_width": 1.5
+        "stroke_width": 1.5,
+        "style": "all",  # "film", "animation" 
     }
     """
     logger.info(f"start task: {task_id}")
@@ -60,8 +59,9 @@ def start(task_id, params: VideoParams):
 
     logger.info("\n\n## generating video terms")
     video_terms = params.video_terms
+    category = None   # This is important. 
     if not video_terms:
-        video_terms = llm.generate_terms(video_subject=video_subject, video_script=video_script, amount=5)
+        video_terms, category = llm.generate_terms(video_subject=video_subject, video_script=video_script, amount=5)
     else:
         if isinstance(video_terms, str):
             video_terms = [term.strip() for term in re.split(r'[,，]', video_terms)]
@@ -161,6 +161,8 @@ def start(task_id, params: VideoParams):
         logger.info(f"\n\n## downloading videos from {params.video_source}")
         downloaded_videos = downloaded_videos + (asyncio.run(material.download_videos(task_id=task_id,
                                                      search_terms=video_terms,
+                                                     category= category,
+                                                     style = params.style,
                                                      source=params.video_source,
                                                      video_aspect=params.video_aspect,
                                                      video_contact_mode=params.video_concat_mode,

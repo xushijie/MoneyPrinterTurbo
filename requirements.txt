@@ -25,3 +25,5 @@ opencv-python~=4.9.0.80
 azure-cognitiveservices-speech~=1.37.0
 git-changelog~=2.5.2
 oss2
+haystack-ai
+
