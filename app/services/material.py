@@ -203,7 +203,7 @@ async def download_videos(task_id: str,
     valid_video_items = []
     valid_video_urls = []
     found_duration = 0.0
-    if style is None:
+    if style is None or style == "all":
         search_videos = search_videos_pexels
         if category:
             search_terms.append(category)
