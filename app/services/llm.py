@@ -313,7 +313,7 @@ def generate_terms(video_subject: str, video_script: str, amount: int = 5) -> Li
 ## Goals:
 Generate {amount} search terms and video meta info for stock videos, depending on the subject and script of a video. 
 The return data structure is 
-{{"terms": [], "category": ""}}
+{{"terms": [], "category": "", "lang": ""}}
 ## Constrains:
 1. the search terms are to be returned as a json-array of strings.
 2. each search term should consist of 1-3 words, always add the main subject of the video.
@@ -323,6 +323,9 @@ The return data structure is
    travel, buildings, business, music. You can ignore the "category" pair if you are not sure.
 4. the search terms must be related to the subject of the video.
 5. reply with english search terms only.
+6. Ignore the video subject if it is empty. 
+7. Default lang is `en`. This value is set to be `zh` when video_script is about chian specified, 
+   e.g., a historical story or person or location in china.
 
 ## Output Example:
 {{"terms": ["search term 1", "search term 2", "search term 3","search term 4","search term 5"]}}
@@ -352,6 +355,8 @@ Please note that you must use English for generating video search terms; Chinese
             if not isinstance(search_terms, list) or not all(isinstance(term, str) for term in search_terms):
                 logger.error("response is not a list of strings.")
                 continue
+            
+            lang = response_data.get("lang", "en")
 
         except Exception as e:
             logger.warning(f"failed to generate video terms: {str(e)}")
@@ -370,7 +375,7 @@ Please note that you must use English for generating video search terms; Chinese
             logger.warning(f"failed to generate video terms, trying again... {i + 1}")
 
     logger.success(f"completed: \n{search_terms}")
-    return search_terms,category
+    return search_terms,category,lang
 
 
 if __name__ == "__main__":
@@ -379,6 +384,6 @@ if __name__ == "__main__":
     # print("######################")
     # print(script)
     script = "生命的意义是一个复杂而深刻的问题，它涉及到哲学、宗教、科学和个人信仰。对于不同的人来说，生命的意义可能各不相同。有些人认为生命的意义在于追求幸福和满足，有些人则认为生命的意义在于实现自我价值和贡献社会。还有些人认为生命的意义在于探索未知和追求知识。无论生命的意义是什么，它都是一个值得每个人深思的问题。"
-    search_terms, category = generate_terms(video_subject=video_subject, video_script=script, amount=5)
+    search_terms, category,lang = generate_terms(video_subject=video_subject, video_script=script, amount=5)
     print("######################")
-    print(f"Search Terms: {search_terms}, Category: {category}")
+    print(f"Search Terms: {search_terms}, Category: {category} and {lang}")

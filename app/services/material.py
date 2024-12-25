@@ -31,6 +31,7 @@ def get_api_key(cfg_key: str):
 
 
 def search_videos_pexels(search_term: str,
+                         lang: str,
                          minimum_duration: int,
                          video_aspect: VideoAspect = VideoAspect.portrait,
                          style: str = None, 
@@ -49,7 +50,7 @@ def search_videos_pexels(search_term: str,
         "query": search_term,
         "per_page": 20,
         "orientation": video_orientation,
-        "locale": "zh-CN"
+        "locale": "zh-CN" if lang == 'zh' else "en-US"
     }
     query_url = f"https://api.pexels.com/videos/search?{urlencode(params)}"
     logger.info(f"searching videos: {query_url}, with proxies: {config.proxy} and key: {api_key}")
@@ -90,6 +91,7 @@ def search_videos_pexels(search_term: str,
 
 
 def search_videos_pixabay(search_term: str,
+                          lang: str,
                           minimum_duration: int,
                           video_aspect: VideoAspect = VideoAspect.portrait,
                           style: str="all",
@@ -109,7 +111,7 @@ def search_videos_pixabay(search_term: str,
         "category": category, # Accepted values: backgrounds, fashion, nature, science, education, feelings, 
                             # health, people, religion, places, animals, industry, computer, food, sports, 
                             # #transportation, travel, buildings, business, music
-        "lang": "zh"
+        "lang": lang
     }
     query_url = f"https://pixabay.com/api/videos/?{urlencode(params)}"
     logger.info(f"searching videos: {query_url}, with proxies: {config.proxy}")
@@ -193,6 +195,7 @@ async def save_video(video_url: str, save_dir: str = "") -> str:
 async def download_videos(task_id: str,
                     search_terms: List[str],
                     category: str = None,
+                    lang: str = "en",
                     style: str = None,
                     source: str = "pexels",
                     video_aspect: VideoAspect = VideoAspect.portrait,
@@ -212,8 +215,10 @@ async def download_videos(task_id: str,
     
     for search_term in search_terms:
         video_items = search_videos(search_term=search_term,
+                                    lang = lang, 
                                     minimum_duration=max_clip_duration,
                                     video_aspect=video_aspect,
+                                    lang = lang, 
                                     style=style if search_videos == search_videos_pixabay else None,
                                     category=category)
         logger.info(f"found {len(video_items)} videos for '{search_term}'")
