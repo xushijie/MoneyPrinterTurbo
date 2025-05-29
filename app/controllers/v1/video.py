@@ -13,6 +13,7 @@ from app.config import config
 from app.controllers import base
 from app.controllers.manager.memory_manager import InMemoryTaskManager
 from app.controllers.manager.chana_redis_manager import ChanaRedisTaskManager
+from app.chana_ai.chana_video_combination_manager import ChanaVideoCombinationManager
 from app.controllers.v1.base import new_router
 from app.models.exception import HttpException
 from app.models.schema import TaskVideoRequest, TaskQueryResponse, TaskResponse, TaskQueryRequest, \
@@ -39,6 +40,7 @@ if _enable_redis:
     logger.success(f"init RedisTaskManger...")
 #    task_manager = RedisTaskManager(max_concurrent_tasks=_max_concurrent_tasks, redis_url=redis_url)
     task_manager = ChanaRedisTaskManager(max_concurrent_tasks=_max_concurrent_tasks, redis_url=redis_url)
+    orchetrator_manager = ChanaVideoCombinationManager(max_concurrent_tasks=_max_concurrent_tasks, redis_url=redis_url)
 else:
     logger.success(f"init InMemory Task Manager...")
     task_manager = InMemoryTaskManager(max_concurrent_tasks=_max_concurrent_tasks)

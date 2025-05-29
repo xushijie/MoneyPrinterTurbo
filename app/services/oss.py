@@ -96,6 +96,31 @@ def existDir(directory_path):
     return False
 
 
+def generateSignedURL(oss_path: str, expires: int = 108000) -> str:
+        """
+        Generate a signed URL for OSS object
+        
+        Args:
+            oss_path (str): The OSS path to generate URL for
+            expires (int): URL expiration time in seconds (default 3 hours)
+            
+        Returns:
+            Optional[str]: Signed URL or None if generation failed
+        """
+        try:
+            if not oss_path:
+                logger.error(f"oss_path can not be empty")
+                return None
+                # Generate signed URL with expiration
+            signed_url = bucket.sign_url('GET', oss_path, expires)
+            logger.info(f"Generated signed URL for path: {oss_path}")
+            return signed_url
+            
+        except Exception as e:
+            logger.error(f"Error generating signed URL: {str(e)}")
+            return None
+        
+
 # Example usage
 if __name__ == "__main__":
     local_file_path = '/work/python/MoneyPrinterTurbo/storage/tasks/010fea67-e39b-4044-8df3-6ffe9a460bb7/final-1.mp4'  # Replace with the path to your local file

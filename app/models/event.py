@@ -2,19 +2,29 @@ from pydantic import BaseModel
 from typing import Optional, List
 from enum import Enum
 import time
+import json
+"""
+The classes in this file should be consistent with that 
+    orchestrator: app/event/combine_event.py 
+
+"""
 
 class TypeEnum(Enum):
-    advertise = 1
-    education = 2
+    advertise = "advertise"
+    education = "education"
     
 class StyleEnum(Enum):
-    cinimation = 1
-    animation = 2
+    cinimation = "cinimation"
+    animation = "animation"
 
 class VideoMeta(BaseModel): 
     style: Optional[StyleEnum] = None
     aspect: Optional[str] = "16:9"
     type: Optional[TypeEnum] = None
+    voice_volume: Optional[float] = 0.5
+    bgm_type: Optional[str] = "custom"
+    bgm_volume: Optional[float] = 0.2
+
 
 
 class VideoCombineStatus(Enum):
@@ -23,15 +33,17 @@ class VideoCombineStatus(Enum):
     COMPLETE = "COMPLETE"
     FAILED = "FAILED"
     TIMEOUT = "TIMEOUT"
-
+ 
+ 
 class ClipInfo(BaseModel):
-    clip_id: str
-    video_source_path: str
+    clip_id: int
+    video_source_path: Optional[str] = None
     audio_source_path: Optional[str] = None
     subtitle_source_path: Optional[str] = None
-    clip_duration: Optional[int] = 6
+    clip_duration: Optional[int] = 6   
     
-class VideoClipCombineTask(BaseModel):   
+class VideoClipCombineTask(BaseModel):
+    id: int
     task_id: str
     project_id: int
     stage_id: int
@@ -43,6 +55,7 @@ class VideoClipCombineTask(BaseModel):
     audio: Optional[str] = None
     background_music: Optional[str] = None
     submit_time: int = round(time.time() * 1000)
+
     
 class VideoClipCombineCompleteEvent(BaseModel):
     id: int
@@ -61,3 +74,9 @@ class VideoClipCombineCompleteEvent(BaseModel):
     
     # 错误信息
     error: Optional[str] = None
+    
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.value
+        return super().default(obj)
