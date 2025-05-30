@@ -35,8 +35,13 @@ def combine_videos(combined_video_path: str,
                    max_clip_duration: int = 5,
                    threads: int = 2,
                    ) -> str:
-    audio_clip = AudioFileClip(audio_file)
-    audio_duration = audio_clip.duration
+    audio_duration = max_clip_duration
+    
+    if audio_file:
+        # 如果音频文件存在，则使用音频文件的时长. 这部分逻辑主要针对moneyPrint的兼容。。
+        audio_clip = AudioFileClip(audio_file)
+        audio_duration = audio_clip.duration
+
     logger.info(f"max duration of audio: {audio_duration} seconds")
     # Required duration of each clip
     req_dur = audio_duration / len(video_paths)

@@ -26,6 +26,7 @@ class ProcessContext:
         self.audio_file = None
         self.bg_music_file = None
         self.subtitle_file = None
+        self.message = []
         
         self.redis_key = None
         
@@ -67,7 +68,7 @@ class Step:
     async def __download_resource__(self, redis_key: str, url: str, saved_dir: str, resource_type: str) -> Optional[Tuple[str, str]]:
         try:
             if not url:
-                logger.info(f"failed to download {resource_type}: {url}")
+                logger.info(f"Skipping download {resource_type}: {url} due to empty url" )
                 return resource_type, None
             
             logger.info(f"downloading {resource_type}: {url}")

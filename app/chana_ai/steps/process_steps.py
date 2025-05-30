@@ -100,12 +100,15 @@ class CombineStep(Step):
         download_videos = [clip.video_source_path for clip in context.clip_list]
         clip_duration = sum(clip.clip_duration for clip in context.clip_list)
         #TODO:  Need to setup default value for videoParams.
+        # BGM_FILE&BGM_TYPE&BGM_VOLUME in the videoParams. 当前并没有使用，和原来的moneyPrint兼容。
         videoParams = VideoParams(video_aspect=event.videoMeta.aspect,  
+                                  video_subject=event.title,
                                   max_clip_duration=clip_duration, video_concat_mode= VideoConcatMode.sequential.value,
                                   subtitle_enabled=False, voice_name=context.audio_file, voice_volume=event.videoMeta.voice_volume,
-                                  bgm_type=event.videoMeta.bgm_type, bgm_volume=event.videoMeta.bgm_volume)
-        path = self.video_process(task_id=context.task_id, path=context.task_path, download_videos= download_videos, 
-                           audio_file=context.audio_file, subtitle_path=context.subtitle_file, bg_music_file=context.bg_music_file, max_clip_duration=clip_duration, params=videoParams)
+                                  bgm_type=event.videoMeta.bgm_type, bgm_volume=event.videoMeta.bgm_volume, bgm_file= context.bg_music_file)
+        path = await self.video_process(task_id=context.task_id, path=context.task_path, download_videos= download_videos, 
+                           audio_file=context.audio_file, subtitle_path=context.subtitle_file, 
+                           max_clip_duration=clip_duration, params=videoParams)
         context.local_path = path
     
     def measure_time(self, context: ProcessContext, start_time: float, end_time: float):
