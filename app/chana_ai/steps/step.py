@@ -73,6 +73,8 @@ class Step:
         context.measure_time_list.append((self.step_name, start_time, end_time))
     
     def update_progress(self, context: ProcessContext, progress: Optional[float] = None, status: Optional[str] = None, message: Optional[str] = None):
+        context.progress = progress
+        context.status = "SUCCESS" if progress == 100 else "PROCESSING"
         sm.state.update_task(task_id= context.redis_key, state=status, progress=progress, message=message)
 
     async def __download_resource__(self, redis_key: str, url: str, saved_dir: str, resource_type: str) -> Optional[Tuple[str, str]]:

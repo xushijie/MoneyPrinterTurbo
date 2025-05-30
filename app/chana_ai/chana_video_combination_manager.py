@@ -45,7 +45,7 @@ class ChanaVideoCombinationManager(RedisTaskManager):
             
         # Fire event
         complete_event = self.build_complete_event(context, event).to_dict()
-        await self.redis_client.lpush(config.compile_clips_complete_queue, json.dumps(complete_event))
+        self.redis_client.lpush(config.compile_clips_complete_queue, json.dumps(complete_event))
         
     def build_complete_event(self, context: ProcessContext, event: VideoClipCombineTask) -> VideoClipCombineCompleteEvent:
         return VideoClipCombineCompleteEvent(
@@ -62,7 +62,9 @@ class ChanaVideoCombinationManager(RedisTaskManager):
     
 
 if __name__ == "__main__":
-    manager = ChanaVideoCombinationManager(max_concurrent_tasks=10, redis_url="redis://localhost:6379")
+
+    from app.controllers.v1.video import orchetrator_manager
+    manager = orchetrator_manager
 
     task = '{"id": 53, "task_id": "CHANA_25070b12-6a5f-49c0-96aa-00ee24ce4a64", "project_id": 29, "stage_id": 24, "user_id": 1, "title": "海底奇遇记", "videoMeta": {"style": "animation", "aspect": "1:1", "type": "advertise"}, "clips": [{"clip_id": 388, "video_source_path": "orchestrator/1/29_24/388/1.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}, {"clip_id": 389, "video_source_path": "orchestrator/1/29_24/389/2.mp4", "audio_source_path": "orchestrator/1/29_24/389/29_24_389_voice.mp3", "subtitle_source_path": "orchestrator/1/29_24/389/29_24_389_subtitle.srt", "clip_duration": 6}, {"clip_id": 390, "video_source_path": "orchestrator/1/29_24/390/3.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}, {"clip_id": 391, "video_source_path": "orchestrator/1/29_24/391/4.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}, {"clip_id": 392, "video_source_path": "orchestrator/1/29_24/392/3.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}], "subtitle": null, "audio": null, "background_music": null, "submit_time": 1748435900245}'
     task_dict = json.loads(task)
