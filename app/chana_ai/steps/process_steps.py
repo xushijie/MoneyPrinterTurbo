@@ -19,20 +19,21 @@ from app.chana_ai.redis_tool import redis_tool
 from app.services.oss import generateSignedURL
 # 初始化 目录和基本变量的值。
 class InitStep(Step):
+    step_name = "init"
+    progress = 5
     async def process(self, context: ProcessContext, event: VideoClipCombineTask):
         context.redis_key = f"chana_task:{event.project_id}:{event.stage_id}:{event.task_id}"
         context.task_id = f"{event.project_id}_{event.stage_id}_{event.task_id}"
         context.task_path = utils.task_dir(sub_dir = context.task_id)
-        
-
-    def measure_time(self, context: ProcessContext, start_time: float, end_time: float):
-        context.measure_time_list["init"] =  start_time, end_time
+        context.oss_remote_dir = f"orchestrator/{event.user_id}/{event.project_id}_{event.stage_id}"
 
     def update_progress(self, context: ProcessContext):
         sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_PROCESSING, progress=5)
 
 
 class DownloadMaterialsStep(Step):
+    step_name = "download_materials"
+    progress = 40
     async def process(self, context: ProcessContext, event: VideoClipCombineTask):
         for clip in event.clips:
             results = await asyncio.gather(
@@ -59,13 +60,12 @@ class DownloadMaterialsStep(Step):
             
             context.clip_list.append(local_clip)
 
-    def measure_time(self, context: ProcessContext, start_time: float, end_time: float):
-        context.measure_time_list["download_materials"] = start_time, end_time
-
     def update_progress(self, context: ProcessContext):
         sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_PROCESSING, progress= 50)
 
-class MaterialBuilderStep(Step):
+class ProjectMaterialStep(Step):
+    step_name = "project_material"
+    progress = 65
     async def process(self, context: ProcessContext, event: VideoClipCombineTask):
         PROJECT_AUDIO = "project_audio"
         PROJECT_BG_MUSIC = "project_bg_music"
@@ -87,15 +87,13 @@ class MaterialBuilderStep(Step):
             else: 
                 logger.error(f"failed to download {result[0]}: {result[1]}")
             
-        
-    def measure_time(self, context: ProcessContext, start_time: float, end_time: float):
-        context.measure_time_list["build_materials"] = start_time, end_time
-    
     def update_progress(self, context: ProcessContext):
         sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_PROCESSING, progress= 65)
 
 class CombineStep(Step):
     video_process = Chana_AI_Video_Process()
+    step_name = "combine"
+    progress = 90
     async def process(self, context: ProcessContext, event: VideoClipCombineTask):
         download_videos = [clip.video_source_path for clip in context.clip_list]
         clip_duration = sum(clip.clip_duration for clip in context.clip_list)
@@ -110,23 +108,21 @@ class CombineStep(Step):
                            audio_file=context.audio_file, subtitle_path=context.subtitle_file, 
                            max_clip_duration=clip_duration, params=videoParams)
         context.local_path = path
-    
-    def measure_time(self, context: ProcessContext, start_time: float, end_time: float):
-        context.measure_time_list["combine"] = start_time, end_time
 
     def update_progress(self, context: ProcessContext):
         sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_PROCESSING, progress=90)
 
 class PostProcessStep(Step):
+    step_name = "post_process"
+    progress = 100
     def __init__(self):
         self.oss_uploader = OssUploader()
         
     async def process(self, context: ProcessContext, event: VideoClipCombineCompleteEvent):
-        oss_path = await self.oss_uploader.upload_from_local(local_path=context.local_path, remote_dir=context.task_id)
-        context.oss_path = oss_path
+        # oss_path = await self.oss_uploader.upload_from_local(local_path=context.local_path, remote_dir=context.oss_remote_dir)
+        # context.oss_path = oss_path
+        pass
     
-    def measure_time(self, context: ProcessContext, start_time: float, end_time: float):
-        context.measure_time_list["uploader"] = start_time, end_time
 
     def update_progress(self, context: ProcessContext):
         sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_PROCESSING, progress=100)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from enum import Enum
 import time
 import json
@@ -63,17 +63,24 @@ class VideoClipCombineCompleteEvent(BaseModel):
     project_id: int
     stage_id: int
     user_id: int
-    status: VideoCombineStatus
-    message: Optional[str] = ""
+    status: str
+    message: Optional[List[str]] = []
     url: Optional[str] = None
     # Metric:  submit_time ==> start_time  ==> donwload_complete_time ==> end_time
-    start_time: int
-    download_complete_time: Optional[int] = None
-    upload_complete_time: Optional[int] = None
-    end_time: Optional[int] = None
+    measure_time: Optional[List[Tuple[str, int, int]]] = []
     
-    # 错误信息
-    error: Optional[str] = None
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "task_id": self.task_id,
+            "project_id": self.project_id,
+            "stage_id": self.stage_id,
+            "user_id": self.user_id,
+            "status": self.status,
+            "message": self.message,
+            "url": self.url,
+            "measure_time": self.measure_time
+        }
     
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):

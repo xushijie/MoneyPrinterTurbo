@@ -8,7 +8,7 @@ from app.config import config
 from app.controllers.manager.chana_redis_manager import AtomicCounter
 from app.controllers.manager.redis_manager import RedisTaskManager
 from app.models.event import VideoClipCombineCompleteEvent, VideoClipCombineTask, CustomJSONEncoder
-from app.chana_ai.steps.process_steps import InitStep, DownloadMaterialsStep, MaterialBuilderStep, CombineStep, PostProcessStep
+from app.chana_ai.steps.process_steps import InitStep, DownloadMaterialsStep, ProjectMaterialStep, CombineStep, PostProcessStep
 
 from app.models.event import VideoCombineStatus
 from app.chana_ai.steps.step import ProcessContext, Step
@@ -17,7 +17,7 @@ from app.chana_ai.steps.step import ProcessContext, Step
 class ChanaVideoCombinationManager(RedisTaskManager):
     def __init__(self, max_concurrent_tasks: int, redis_url: str):
         super().__init__(max_concurrent_tasks, redis_url)
-        self.steps = [InitStep(), DownloadMaterialsStep(), MaterialBuilderStep(), CombineStep(), PostProcessStep()]
+        self.steps = [InitStep(), DownloadMaterialsStep(), ProjectMaterialStep(), CombineStep(), PostProcessStep()]
         self.counter = AtomicCounter()
         # self.monitor_thread = threading.Thread(target=self.__start__, daemon=True)
         # self.monitor_thread.start()
@@ -41,10 +41,10 @@ class ChanaVideoCombinationManager(RedisTaskManager):
     async def process_task(self, event: VideoClipCombineTask):
         context = ProcessContext()
         for step in self.steps:
-            await step.process(context, event)
+            await step(context, event)
             
         # Fire event
-        complete_event = self.build_complete_event(context, event)
+        complete_event = self.build_complete_event(context, event).to_dict()
         await self.redis_client.lpush(config.compile_clips_complete_queue, json.dumps(complete_event))
         
     def build_complete_event(self, context: ProcessContext, event: VideoClipCombineTask) -> VideoClipCombineCompleteEvent:
@@ -54,11 +54,10 @@ class ChanaVideoCombinationManager(RedisTaskManager):
             project_id=event.project_id,
             stage_id=event.stage_id,
             user_id=event.user_id,
-            status= VideoCombineStatus.COMPLETE if context.oss_path else VideoCombineStatus.FAILED,
-            message= context.message,
+            status= VideoCombineStatus.COMPLETE.value if context.oss_path else VideoCombineStatus.FAILED.value,
+            message= context.message,  
             url=context.oss_path,
-            start_time=context.measure_time_list["init"][0],
-            end_time=context.measure_time_list[-1][1],
+            measure_time=context.measure_time_list,
         )
     
 

@@ -1,9 +1,5 @@
 
 import os
-from time import time
-
-from fastapi import HTTPException
-
 from app.services.oss import bucket
 from loguru import logger
 
@@ -19,7 +15,6 @@ class OssUploader:
     ) -> str:
         try:
             # Generate unique filename using timestamp
-            timestamp = int(time.time() * 1000)
             file_name = os.path.basename(local_path)
             
             # Construct remote path

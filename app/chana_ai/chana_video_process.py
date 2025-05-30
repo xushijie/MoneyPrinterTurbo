@@ -21,10 +21,10 @@ class Chana_AI_Video_Process:
                              threads=self.n_threads)
 
         final_video_path = "/".join([path, "final-video.mp4"])
-
-        logger.info(f"\n\n## generating video: => {final_video_path}")
         if not audio_file:
             return combined_video_path
+        
+        logger.info(f"\n\n## generating video: => {final_video_path}")
         # Put everything together
         return video.generate_video(video_path=combined_video_path,
                              audio_path=audio_file,

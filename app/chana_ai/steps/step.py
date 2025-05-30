@@ -1,7 +1,7 @@
 
 
 from typing import Optional, Tuple
-from datetime import time
+from time import time
 import os
 import requests
 from loguru import  logger
@@ -13,15 +13,21 @@ from app.services.oss import generateSignedURL
 from app.chana_ai.redis_tool import redis_tool
 from moviepy.editor import VideoFileClip
 
-
+"""
+TODO  
+1. 整个context 在最后结束的时候需要保存下来。 
+2. 执行过程中的所有信息，尤其是错误等信息，需要记录下来。
+3. 
+"""
 class ProcessContext:
     def __init__(self):
         self.clip_list = []   # {clip_id: {video_source_path, audio_source_path, subtitle_source_path}}
         self.task_id = None
         self.task_path = None
         self.local_path = None
-        self.oss_path = None
-        self.measure_time_list = {}
+        self.oss_path = None    # 合并后的oss_path 视频路径，需要作为消息返回
+        self.oss_remote_dir = None   # 合并后的oss_path 视频目录，在生成 oss_path的时候需要使用。
+        self.measure_time_list = []
         self.progress = RedisProgress()
         self.audio_file = None
         self.bg_music_file = None
@@ -36,34 +42,38 @@ class RedisProgress:
     message=""
     
 class Step:
+    step_name = None
+    progress = 0
+    
     def __init__(self):
         pass
 
     async def __call__(self, context: ProcessContext, event: VideoClipCombineTask):
-        start_time = time.time()  
+        start_time = time()  
         message = None
         try:
             await self.process(context, event)
         except Exception as e:
+            context.status = const.TASK_STATE_FAILED
             logger.error(f"Step {self.__class__.__name__} failed: {e}")
             message = str(e)
             raise e
         finally:    
-            end_time = time.time()
+            end_time = time()
             if message:
                 self.update_progress(context=context, progress=100, status=const.TASK_STATE_FAILED, message=message)
             else: 
                 self.update_progress(context=context)
-            self.measure_time(context, start_time, end_time)
+            self.measure_time(context, int(start_time), int(end_time))
 
     async def process(self, context: ProcessContext, event: VideoClipCombineTask):
         pass
     
     def measure_time(self, context: ProcessContext, start_time: float, end_time: float):
-        pass
+        context.measure_time_list.append((self.step_name, start_time, end_time))
     
     def update_progress(self, context: ProcessContext, progress: Optional[float] = None, status: Optional[str] = None, message: Optional[str] = None):
-        sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_FAILED, progress=100, message=message)
+        sm.state.update_task(task_id= context.redis_key, state=status, progress=progress, message=message)
 
     async def __download_resource__(self, redis_key: str, url: str, saved_dir: str, resource_type: str) -> Optional[Tuple[str, str]]:
         try:
