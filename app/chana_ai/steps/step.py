@@ -5,6 +5,7 @@ from time import time
 import os
 import requests
 from loguru import  logger
+from pydantic import BaseModel
 from app.utils import utils
 from app.models import const
 from app.models.event import VideoClipCombineTask
@@ -28,19 +29,26 @@ class ProcessContext:
         self.oss_path = None    # 合并后的oss_path 视频路径，需要作为消息返回
         self.oss_remote_dir = None   # 合并后的oss_path 视频目录，在生成 oss_path的时候需要使用。
         self.measure_time_list = []
-        self.progress = RedisProgress()
+        self.progresses = []
         self.audio_file = None
         self.bg_music_file = None
-        self.subtitle_file = None
-        self.message = []
-        
+        self.subtitle_file = None        
         self.redis_key = None
         
-class RedisProgress:
-    state=const.TASK_STATE_FAILED
-    progress=0
-    message=""
-    
+class Progress(BaseModel):
+    label: str
+    status: int
+    progress: int
+    message: Optional[str] = ""
+
+    def to_dict(self):
+        return {
+            "label": self.label,
+            "status": self.status,
+            "progress": self.progress,
+            "message": self.message
+        }
+
 class Step:
     step_name = None
     progress = 0
@@ -63,7 +71,7 @@ class Step:
             if message:
                 self.update_progress(context=context, progress=100, status=const.TASK_STATE_FAILED, message=message)
             else: 
-                self.update_progress(context=context)
+                self.update_progress(context=context, progress= self.progress, status = const.TASK_STATE_PROCESSING)
             self.measure_time(context, int(start_time), int(end_time))
 
     async def process(self, context: ProcessContext, event: VideoClipCombineTask):
@@ -72,9 +80,9 @@ class Step:
     def measure_time(self, context: ProcessContext, start_time: float, end_time: float):
         context.measure_time_list.append((self.step_name, start_time, end_time))
     
-    def update_progress(self, context: ProcessContext, progress: Optional[float] = None, status: Optional[str] = None, message: Optional[str] = None):
-        context.progress = progress
-        context.status = "SUCCESS" if progress == 100 else "PROCESSING"
+    def update_progress(self, context: ProcessContext, progress: Optional[int], status: Optional[int], message: Optional[str] = ''):
+        context.progresses.append(Progress(label=self.step_name, progress=progress, status=status, message=message))
+        context.status = "SUCCESS" if progress == 100 else status
         sm.state.update_task(task_id= context.redis_key, state=status, progress=progress, message=message)
 
     async def __download_resource__(self, redis_key: str, url: str, saved_dir: str, resource_type: str) -> Optional[Tuple[str, str]]:

@@ -3,6 +3,7 @@
 import json
 import threading
 import asyncio
+from time import time
 from loguru import logger
 from app.config import config
 from app.controllers.manager.chana_redis_manager import AtomicCounter
@@ -19,8 +20,8 @@ class ChanaVideoCombinationManager(RedisTaskManager):
         super().__init__(max_concurrent_tasks, redis_url)
         self.steps = [InitStep(), DownloadMaterialsStep(), ProjectMaterialStep(), CombineStep(), PostProcessStep()]
         self.counter = AtomicCounter()
-        # self.monitor_thread = threading.Thread(target=self.__start__, daemon=True)
-        # self.monitor_thread.start()
+        self.monitor_thread = threading.Thread(target=self.__start__, daemon=True)
+        self.monitor_thread.start()
         logger.info("TasResubmitTask thread started")
 
     def __start__(self):
@@ -45,6 +46,7 @@ class ChanaVideoCombinationManager(RedisTaskManager):
             
         # Fire event
         complete_event = self.build_complete_event(context, event).to_dict()
+        logger.info(f"complete_event: {complete_event}")
         self.redis_client.lpush(config.compile_clips_complete_queue, json.dumps(complete_event))
         
     def build_complete_event(self, context: ProcessContext, event: VideoClipCombineTask) -> VideoClipCombineCompleteEvent:
@@ -55,9 +57,10 @@ class ChanaVideoCombinationManager(RedisTaskManager):
             stage_id=event.stage_id,
             user_id=event.user_id,
             status= VideoCombineStatus.COMPLETE.value if context.oss_path else VideoCombineStatus.FAILED.value,
-            message= context.message,  
+            message= [step.to_dict() for step in context.progresses],  
             url=context.oss_path,
             measure_time=context.measure_time_list,
+            submit_time= int(time())
         )
     
 

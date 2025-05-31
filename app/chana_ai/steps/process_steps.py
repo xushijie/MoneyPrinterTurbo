@@ -27,10 +27,6 @@ class InitStep(Step):
         context.task_path = utils.task_dir(sub_dir = context.task_id)
         context.oss_remote_dir = f"orchestrator/{event.user_id}/{event.project_id}_{event.stage_id}"
 
-    def update_progress(self, context: ProcessContext):
-        sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_PROCESSING, progress=5)
-
-
 class DownloadMaterialsStep(Step):
     step_name = "download_materials"
     progress = 40
@@ -60,9 +56,7 @@ class DownloadMaterialsStep(Step):
             
             context.clip_list.append(local_clip)
 
-    def update_progress(self, context: ProcessContext):
-        sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_PROCESSING, progress= 50)
-
+ 
 class ProjectMaterialStep(Step):
     step_name = "project_material"
     progress = 65
@@ -87,9 +81,7 @@ class ProjectMaterialStep(Step):
             else: 
                 logger.error(f"failed to download {result[0]}: {result[1]}")
             
-    def update_progress(self, context: ProcessContext):
-        sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_PROCESSING, progress= 65)
-
+ 
 class CombineStep(Step):
     video_process = Chana_AI_Video_Process()
     step_name = "combine"
@@ -107,10 +99,10 @@ class CombineStep(Step):
         path = await self.video_process(task_id=context.task_id, path=context.task_path, download_videos= download_videos, 
                            audio_file=context.audio_file, subtitle_path=context.subtitle_file, 
                            max_clip_duration=clip_duration, params=videoParams)
+        logger.info(f"Local combined video path: {path}")
         context.local_path = path
+        
 
-    def update_progress(self, context: ProcessContext):
-        sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_PROCESSING, progress=90)
 
 class PostProcessStep(Step):
     step_name = "post_process"
@@ -119,10 +111,6 @@ class PostProcessStep(Step):
         self.oss_uploader = OssUploader()
         
     async def process(self, context: ProcessContext, event: VideoClipCombineCompleteEvent):
-        # oss_path = await self.oss_uploader.upload_from_local(local_path=context.local_path, remote_dir=context.oss_remote_dir)
-        # context.oss_path = oss_path
-        pass
-    
-
-    def update_progress(self, context: ProcessContext):
-        sm.state.update_task(task_id= context.redis_key, state=const.TASK_STATE_PROCESSING, progress=100)
+        oss_path = await self.oss_uploader.upload_from_local(local_path=context.local_path, remote_dir=context.oss_remote_dir)
+        logger.info(f"remote combined video path: {oss_path}")
+        context.oss_path = oss_path
