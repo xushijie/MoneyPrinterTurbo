@@ -33,9 +33,9 @@ class DownloadMaterialsStep(Step):
     async def process(self, context: ProcessContext, event: VideoClipCombineTask):
         for clip in event.clips:
             results = await asyncio.gather(
-                self.__download_resource__(redis_key=context.redis_key, url=self.generate_oss_url(clip.video_source_path), saved_dir=context.task_path, resource_type="video"),
-                self.__download_resource__(redis_key=context.redis_key, url=self.generate_oss_url(clip.audio_source_path), saved_dir=context.task_path, resource_type="audio"),
-                self.__download_resource__(redis_key=context.redis_key, url=self.generate_oss_url(clip.subtitle_source_path), saved_dir=context.task_path, resource_type="subtitle"),
+                self.__download_resource__(redis_key=context.redis_key, url=clip.video_source_path, saved_dir=context.task_path, resource_type="video"),
+                self.__download_resource__(redis_key=context.redis_key, url=clip.audio_source_path, saved_dir=context.task_path, resource_type="audio"),
+                self.__download_resource__(redis_key=context.redis_key, url=clip.subtitle_source_path, saved_dir=context.task_path, resource_type="subtitle"),
                 )
             
             local_clip = ClipInfo(
@@ -66,10 +66,10 @@ class ProjectMaterialStep(Step):
         PROJECT_SUBTITLE = "project_subtitle"
 
         results = await asyncio.gather(
-                self.__download_resource__(redis_key=context.redis_key, url=self.generate_oss_url(event.audio), saved_dir=context.task_path, resource_type=PROJECT_AUDIO),
-                self.__download_resource__(redis_key=context.redis_key, url=self.generate_oss_url(event.background_music), saved_dir=context.task_path, resource_type=PROJECT_BG_MUSIC),
-                self.__download_resource__(redis_key=context.redis_key, url=self.generate_oss_url(event.subtitle), saved_dir=context.task_path, resource_type=PROJECT_SUBTITLE),
-                )
+            self.__download_resource__(redis_key=context.redis_key, url=event.audio, saved_dir=context.task_path, resource_type=PROJECT_AUDIO),
+            self.__download_resource__(redis_key=context.redis_key, url=event.background_music, saved_dir=context.task_path, resource_type=PROJECT_BG_MUSIC),
+            self.__download_resource__(redis_key=context.redis_key, url=event.subtitle, saved_dir=context.task_path, resource_type=PROJECT_SUBTITLE),
+            )
         
         for result in results:
             if result[0] == PROJECT_AUDIO:
@@ -87,6 +87,9 @@ class CombineStep(Step):
     step_name = "combine"
     progress = 90
     async def process(self, context: ProcessContext, event: VideoClipCombineTask):
+        if len(context.clip_list) <=2:
+            raise Exception("Not enough clips to combine")
+        
         download_videos = [clip.video_source_path for clip in context.clip_list]
         clip_duration = sum(clip.clip_duration for clip in context.clip_list)
         #TODO:  Need to setup default value for videoParams.
@@ -114,3 +117,4 @@ class PostProcessStep(Step):
         oss_path = await self.oss_uploader.upload_from_local(local_path=context.local_path, remote_dir=context.oss_remote_dir)
         logger.info(f"remote combined video path: {oss_path}")
         context.oss_path = oss_path
+        # context.oss_path = "orchestrator/1/29_24/combined-video.mp4"

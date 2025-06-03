@@ -29,17 +29,29 @@ class ChanaVideoCombinationManager(RedisTaskManager):
         while True:
             task = self.redis_client.brpop(config.compile_clips_queue)
             if task:
+                task_json = task[1].decode("utf-8")
+                logger.info(f"receive a clip task: {task_json}")
+                event = VideoClipCombineTask(**json.loads(task_json))
                 try:
-                    task_json = task[1].decode("utf-8")
-                    logger.info(f"receive a clip task: {task_json}")
-                    event = VideoClipCombineTask(**json.loads(task_json))
-                    asyncio.run(self.process_task(event))
+                    asyncio.run(self.process_event(event))
                 except Exception as e:
-                    logger.error(f"error processing task: {e}")
+                    logger.error(f"error processing task: str{e}")
+                    failed_event = VideoClipCombineCompleteEvent(
+                        id=event.id,
+                        task_id=event.task_id,
+                        project_id=event.project_id,
+                        stage_id=event.stage_id,
+                        user_id=event.user_id,
+                        status=VideoCombineStatus.FAILED.value,
+                        # TODO:  better to construct a message with all the steps here. 目前只是临时方案
+                        message=[{"step": "process_task", "message": str(e)}],
+                        submit_time=int(time())
+                    )
+                    self.redis_client.lpush(config.compile_clips_complete_queue, json.dumps(failed_event.to_dict()))
                     continue
                 
     
-    async def process_task(self, event: VideoClipCombineTask):
+    async def process_event(self, event: VideoClipCombineTask):
         context = ProcessContext()
         for step in self.steps:
             await step(context, event)
@@ -69,9 +81,9 @@ if __name__ == "__main__":
     from app.controllers.v1.video import orchetrator_manager
     manager = orchetrator_manager
 
-    task = '{"id": 53, "task_id": "CHANA_25070b12-6a5f-49c0-96aa-00ee24ce4a64", "project_id": 29, "stage_id": 24, "user_id": 1, "title": "海底奇遇记", "videoMeta": {"style": "animation", "aspect": "1:1", "type": "advertise"}, "clips": [{"clip_id": 388, "video_source_path": "orchestrator/1/29_24/388/1.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}, {"clip_id": 389, "video_source_path": "orchestrator/1/29_24/389/2.mp4", "audio_source_path": "orchestrator/1/29_24/389/29_24_389_voice.mp3", "subtitle_source_path": "orchestrator/1/29_24/389/29_24_389_subtitle.srt", "clip_duration": 6}, {"clip_id": 390, "video_source_path": "orchestrator/1/29_24/390/3.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}, {"clip_id": 391, "video_source_path": "orchestrator/1/29_24/391/4.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}, {"clip_id": 392, "video_source_path": "orchestrator/1/29_24/392/3.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}], "subtitle": null, "audio": null, "background_music": null, "submit_time": 1748435900245}'
+    task = '{"id": 67, "task_id": "CHANA_3d4d801d-a728-4ab8-8c12-0b3f96477633", "project_id": 29, "stage_id": 24, "user_id": 1, "title": "\u6d4b\u8bd52", "videoMeta": {"style": "animation", "aspect": "9:16", "type": "advertise"}, "clips": [{"clip_id": 388, "video_source_path": "orchestrator/1/29_24/388/1.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}, {"clip_id": 389, "video_source_path": "orchestrator/1/29_24/389/2.mp4", "audio_source_path": "orchestrator/1/29_24/389/29_24_389_voice.mp3", "subtitle_source_path": "orchestrator/1/29_24/389/29_24_389_subtitle.srt", "clip_duration": 6}, {"clip_id": 390, "video_source_path": "orchestrator/1/29_390/video/20250310212906.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}, {"clip_id": 391, "video_source_path": "orchestrator/1/29_24/391/4.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}, {"clip_id": 392, "video_source_path": "orchestrator/1/29_24/392/3.mp4", "audio_source_path": null, "subtitle_source_path": null, "clip_duration": 6}], "subtitle": "orchestrator/1/29_24/29_24_0_subtitle_1748771103537.srt", "audio": "orchestrator/1/29_24/29_24_0_voice_1748771103467.mp3", "background_music": null, "submit_time": 1748938467554}'
     task_dict = json.loads(task)
     event = VideoClipCombineTask(**task_dict)
-    asyncio.run(manager.process_task(event))
+    asyncio.run(manager.process_event(event))
     logger.info(f"event: complete..")
     

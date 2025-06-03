@@ -91,8 +91,9 @@ class Step:
                 logger.info(f"Skipping download {resource_type}: {url} due to empty url" )
                 return resource_type, None
             
-            logger.info(f"downloading {resource_type}: {url}")
-            saved_path = await self.__download__(url=url, save_dir=saved_dir, resource_type=resource_type)
+            oss_url = self.generate_oss_url(url)
+            logger.info(f"downloading {resource_type}: {url} =》 {oss_url}")
+            saved_path = await self.__download__(url=oss_url, save_dir=saved_dir, resource_type=resource_type)
             sm.state.update_task(task_id= redis_key, state=const.TASK_STATE_PROCESSING, progress= 30)
             if saved_path:
                 logger.info(f"saved path to: {saved_path}")
@@ -139,13 +140,14 @@ class Step:
                 logger.warning(f"invalid video file: {download_path} => {str(e)}")
         return None
     
-    def generate_oss_url(self, key: str):
+    def generate_oss_url(self, key: str, use_cache: bool = False, expires: int = 75000):
         if not key:
             return None
-        cached_one = redis_tool.get_object(key)
-        if cached_one:
-            return cached_one
-        else:
-            oss_url = generateSignedURL(oss_path=key, expires=108000)
-            redis_tool.set_object(key=key, value=oss_url, expires=108000)
-            return oss_url     
+        if use_cache: 
+            cached_one = redis_tool.get_object(key)
+            if cached_one:
+                return cached_one
+        
+        oss_url = generateSignedURL(oss_path=key, expires=expires)
+        redis_tool.set_object(key=key, value=oss_url, expires= int(expires*0.8)) # Less than 80% of the URL life time.
+        return oss_url     

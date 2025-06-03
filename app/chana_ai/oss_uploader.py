@@ -1,5 +1,6 @@
 
 import os
+import time
 from app.services.oss import bucket
 from loguru import logger
 
@@ -16,9 +17,11 @@ class OssUploader:
         try:
             # Generate unique filename using timestamp
             file_name = os.path.basename(local_path)
+            base_file_name = file_name.split(".")[0]
+            suffix = file_name.split(".")[-1]
             
             # Construct remote path
-            oss_path = f"{remote_dir}/{file_name}"
+            oss_path = f"{remote_dir}/{base_file_name}_{int(time.time())}.{suffix}"
             
             # Upload file to OSS
             bucket.put_object_from_file(
