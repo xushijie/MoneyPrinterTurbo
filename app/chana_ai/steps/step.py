@@ -99,7 +99,7 @@ class Step:
                 logger.info(f"saved path to: {saved_path}")
                 return resource_type, saved_path
             else:
-                logger.error(f"failed to download {resource_type}: {url}")
+                logger.error(f"failed to download {resource_type}: {url} =》 {oss_url}")
                 return resource_type, None
         except Exception as e:
             logger.error(f"failed to download {resource_type}: {url} => {str(e)}")

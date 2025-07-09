@@ -67,6 +67,7 @@ class ChanaRedisTaskManager(RedisTaskManager):
                     kwargs = task_info['func'](*task_info['args'], **task_info['kwargs'])
                     user_id = task_info['user_id']
                     self.post_process(task_info['kwargs']['task_id'], user_id, kwargs)
+                    
                 time.sleep(1)
             except Exception as e:
                 logger.exception(f"Caught an exception: {task_info['kwargs']['task_id']}, {e}")
@@ -108,6 +109,8 @@ class ChanaRedisTaskManager(RedisTaskManager):
         if not config.debug:
             utils.remove(cached_videos, final_videos)
             logger.info(f"Complete remove local caches for {task_id}")
+
+        sm.state.fire_complete_event(task_id=task_id)
 
 
 class AtomicCounter(object):

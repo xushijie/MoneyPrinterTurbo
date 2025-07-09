@@ -16,6 +16,9 @@ class InMemoryTaskManager(TaskManager):
     def enqueue(self, task: Dict):
         self.queue.put(task)
 
+    def enqueue_task_complete_event(self, task_id: str):
+        logger.error("You should not seen this message..")
+
     def dequeue(self):
         return self.queue.get()
 

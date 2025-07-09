@@ -87,6 +87,10 @@ class RedisState(BaseState):
     def delete_task(self, task_id: str):
         self._redis.delete(task_id)
 
+    def fire_complete_event(self, task_id: str): 
+        self._redis.rpush(config.app.get('task_complete_queue', "task_queue_complete"), task_id)
+        
+
     @staticmethod
     def _convert_to_original_type(value):
         """

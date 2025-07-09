@@ -259,7 +259,7 @@ def generate_video(video_path: str,
     video_clip = VideoFileClip(video_path)
     audio_clip = AudioFileClip(audio_path).volumex(params.voice_volume)
 
-    if subtitle_path and os.path.exists(subtitle_path):
+    if params.subtitle_enabled and subtitle_path and os.path.exists(subtitle_path):
         sub = SubtitlesClip(subtitles=subtitle_path, encoding='utf-8')
         text_clips = []
         for item in sub.subtitles:

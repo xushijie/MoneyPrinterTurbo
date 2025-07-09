@@ -16,9 +16,6 @@ from app.services.chanaVideo import video
 from app.services import state as sm
 from app.utils import utils
 
-
-
-
 def start(task_id, params: VideoParams):
     """
     {
@@ -53,6 +50,7 @@ def start(task_id, params: VideoParams):
     if not video_script:
         message = "failed to generate video script."
         sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=10, message=message, end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        sm.state.fire_complete_event(task_id= task_id)
         logger.error(message)
         return
 
@@ -76,6 +74,7 @@ def start(task_id, params: VideoParams):
         message = "failed to generate video terms."
         sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=20, message = message, end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         logger.error("failed to generate video terms.")
+        sm.state.fire_complete_event(task_id= task_id)
         return
 
     script_file = path.join(utils.task_dir(task_id), f"script.json")
@@ -172,6 +171,7 @@ def start(task_id, params: VideoParams):
         message = "failed to download videos, maybe the network is not available. if you are in China, please use a VPN."
         sm.state.update_task(task_id, state=const.TASK_STATE_FAILED, progress=50, message=message, end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         logger.error(message)
+        sm.state.fire_complete_event(task_id= task_id)
         return
 
     sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=50)
@@ -237,8 +237,3 @@ def start(task_id, params: VideoParams):
     # Will expire after 3 hours
     sm.state.expire(task_id)
     return kwargs
-
-# def start_test(task_id, params: VideoParams):
-#     print(f"start task {task_id} \n")
-#     time.sleep(5)
-#     print(f"task {task_id} finished \n")
