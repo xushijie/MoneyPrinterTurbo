@@ -110,7 +110,7 @@ class ChanaRedisTaskManager(RedisTaskManager):
             utils.remove(cached_videos, final_videos)
             logger.info(f"Complete remove local caches for {task_id}")
 
-        sm.state.fire_complete_event(task_id=task_id)
+        sm.state.fire_event(task_id=task_id, progress=100, video_path=oss_paths[0] if oss_paths else None, screenshot=screenshot_path)
 
 
 class AtomicCounter(object):

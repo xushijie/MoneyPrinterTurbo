@@ -1,7 +1,9 @@
 import ast
+import json
 from abc import ABC, abstractmethod
 from app.config import config
 from app.models import const
+from app.models.Video_task_event import VideoTaskCompleteEvent
 
 # Base class for state management
 class BaseState(ABC):
@@ -46,7 +48,6 @@ class MemoryState(BaseState):
     def expire(self, task_id: str):
         pass
         
-
 # Redis state management
 class RedisState(BaseState):
 
@@ -87,9 +88,30 @@ class RedisState(BaseState):
     def delete_task(self, task_id: str):
         self._redis.delete(task_id)
 
-    def fire_complete_event(self, task_id: str): 
-        self._redis.rpush(config.app.get('task_complete_queue', "task_queue_complete"), task_id)
-        
+    def fire_event(self, task_id: str, progress: int = 0, video_path: str = None, screenshot: str = None): 
+        task = self.get_task(task_id)
+        if not task:
+            return
+        print(f"Firing event for task {task}\n")
+        event = VideoTaskCompleteEvent(
+            task_id=task_id,
+            user_id=task.get('user_id', 0),
+            path_names= video_path,
+            screenshort=screenshot,
+            status=task.get('status', const.TASK_COMPLETE),
+            message=task.get('message', ""),
+            stage_times={
+                "endTime": task.get('end_time', None),
+                "startQueuingTime": task.get('start_queuing_time', None),
+                "startProcessingTime": task.get('start_processing_time', None),
+            },
+            progress=progress or task.get('progress', 0),
+        )
+        self.__fire_event__(event)
+
+    def __fire_event__(self, event: VideoTaskCompleteEvent):
+        serialized = json.dumps(event.model_dump()).encode("utf-8")
+        self._redis.rpush(config.app.get('task_event_queue', "task_queue_event"), serialized)
 
     @staticmethod
     def _convert_to_original_type(value):
@@ -120,3 +142,8 @@ _redis_password = config.app.get("redis_password", None)
 _redis_ttl = config.app.get('redis_ttl', 3)
 
 state = RedisState(host=_redis_host, port=_redis_port, db=_redis_db, password=_redis_password) if _enable_redis else MemoryState()
+
+
+if __name__ == "__main__":
+
+    state.fire_event("fd31a625-05b7-4e9c-991e-53cc376a52bd", progress=100)
