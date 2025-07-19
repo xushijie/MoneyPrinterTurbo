@@ -111,6 +111,7 @@ class ChanaRedisTaskManager(RedisTaskManager):
             logger.info(f"Complete remove local caches for {task_id}")
 
         sm.state.fire_event(task_id=task_id, progress=100, video_path=oss_paths[0] if oss_paths else None, screenshot=screenshot_path)
+        logger.info(f"Fire event for task {task_id}")
 
 
 class AtomicCounter(object):

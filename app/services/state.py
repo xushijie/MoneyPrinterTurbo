@@ -94,10 +94,10 @@ class RedisState(BaseState):
             return
         print(f"Firing event for task {task}\n")
         event = VideoTaskCompleteEvent(
-            task_id=task_id,
-            user_id=task.get('user_id', 0),
-            path_names= video_path,
-            screenshort=screenshot,
+            taskId=task_id,
+            userId=task.get('user_id', 0),
+            pathNames = [video_path],
+            screenshot=screenshot,
             status=task.get('status', const.TASK_COMPLETE),
             message=task.get('message', ""),
             stage_times={
@@ -111,7 +111,7 @@ class RedisState(BaseState):
 
     def __fire_event__(self, event: VideoTaskCompleteEvent):
         serialized = json.dumps(event.model_dump()).encode("utf-8")
-        self._redis.rpush(config.app.get('task_event_queue', "task_queue_event"), serialized)
+        self._redis.rpush(config.task_complete_queue, serialized)
 
     @staticmethod
     def _convert_to_original_type(value):
@@ -146,4 +146,4 @@ state = RedisState(host=_redis_host, port=_redis_port, db=_redis_db, password=_r
 
 if __name__ == "__main__":
 
-    state.fire_event("fd31a625-05b7-4e9c-991e-53cc376a52bd", progress=100)
+    state.fire_event("0df43203-a517-49e7-b82d-78f5a255bbc1", progress=100)

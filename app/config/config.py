@@ -60,6 +60,7 @@ project_version = _cfg.get("project_version", "1.1.9")
 reload_debug = False
 debug = _cfg.get('debug', False)
 
+task_complete_queue = _cfg.get("task_complete_queue", "task_complete_queue")
 compile_clips_queue = _cfg.get("compile_clips_queue", "compile_clips_task_queue")
 compile_clips_complete_queue = _cfg.get("compile_clips_complete_queue", "compile_clips_complete_queue")
 
