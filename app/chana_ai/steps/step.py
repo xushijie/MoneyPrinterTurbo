@@ -13,6 +13,8 @@ from app.services import state as sm
 from app.services.oss import generateSignedURL
 from app.chana_ai.redis_tool import redis_tool
 from moviepy.editor import VideoFileClip
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 """
 TODO  
@@ -99,7 +101,7 @@ class Step:
                 logger.info(f"saved path to: {saved_path}")
                 return resource_type, saved_path
             else:
-                logger.error(f"failed to download {resource_type}: {url} =》 {oss_url}")
+                logger.error(f"failed to download {resource_type}: {url}  => {oss_url}")
                 return resource_type, None
         except Exception as e:
             logger.error(f"failed to download {resource_type}: {url} => {str(e)}")
@@ -119,11 +121,9 @@ class Step:
             logger.info(f"video already exists: {download_path}")
             return download_path
 
-    
-        with open(download_path, "wb") as f:
-            f.write(requests.get(url, verify=False, timeout=(60, 240)).content)
-
-        if resource_type == "video" and os.path.exists(download_path) and os.path.getsize(download_path) > 0:
+        download_result = self.__download_with_retry__(url, download_path=download_path)
+        
+        if download_result and resource_type == "video" and os.path.exists(download_path) and os.path.getsize(download_path) > 0:
             try:
                 # To verify the video is valid
                 clip = VideoFileClip(download_path)
@@ -134,11 +134,15 @@ class Step:
                     return download_path
             except Exception as e:
                 try:
+                    logger.error('exception during check donwload result {e} for {url}')
                     os.remove(download_path)
                 except Exception as e:
                     pass
                 logger.warning(f"invalid video file: {download_path} => {str(e)}")
-        return None
+            return None
+
+        # Return donwload_path if it is non-video. (Audio, src cases)
+        return download_path
     
     def generate_oss_url(self, key: str, use_cache: bool = False, expires: int = 75000):
         if not key:
@@ -151,3 +155,32 @@ class Step:
         oss_url = generateSignedURL(oss_path=key, expires=expires)
         redis_tool.set_object(key=key, value=oss_url, expires= int(expires*0.8)) # Less than 80% of the URL life time.
         return oss_url     
+
+    def __download_with_retry__(self, url, download_path, max_retries=3, backoff_factor=1):
+        session = requests.Session()
+        
+        # 配置重试策略
+        retry = Retry(
+            total=max_retries,                 # 总重试次数
+            connect=max_retries,               # 连接错误重试次数
+            read=max_retries,                  # 读取超时重试次数
+            backoff_factor=backoff_factor,     # 退避因子（等待时间：1, 2, 4, 8...）
+            status_forcelist=[500, 502, 503, 504],  # 对这些状态码进行重试
+            allowed_methods=["GET"]            # 仅对GET请求重试（默认）
+        )
+        
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        
+        try:
+            response = session.get(url, verify=False, timeout=(60, 240))
+            response.raise_for_status()  # 非2xx状态码抛出异常
+            with open(download_path, "wb") as f:
+                f.write(response.content)
+            return True
+        except requests.exceptions.RequestException as e:
+            logger.error(f"下载失败: {e}")
+            return False
+        finally:
+            session.close()

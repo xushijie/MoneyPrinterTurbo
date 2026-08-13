@@ -9,7 +9,6 @@ from app.services import state as sm
 from app.utils import utils
 from app.chana_ai.oss_uploader import OssUploader
 from app.config import config
-from moviepy.video.io.VideoFileClip import VideoFileClip
 from app.chana_ai.chana_video_process import Chana_AI_Video_Process
 from app.models.schema import VideoParams, VideoConcatMode
 from app.models.event import VideoClipCombineCompleteEvent, VideoClipCombineTask, ClipInfo
@@ -35,7 +34,7 @@ class DownloadMaterialsStep(Step):
             results = await asyncio.gather(
                 self.__download_resource__(redis_key=context.redis_key, url=clip.video_source_path, saved_dir=context.task_path, resource_type="video"),
                 self.__download_resource__(redis_key=context.redis_key, url=clip.audio_source_path, saved_dir=context.task_path, resource_type="audio"),
-                self.__download_resource__(redis_key=context.redis_key, url=clip.subtitle_source_path, saved_dir=context.task_path, resource_type="subtitle"),
+                # self.__download_resource__(redis_key=context.redis_key, url=clip.subtitle_source_path, saved_dir=context.task_path, resource_type="subtitle"),
                 )
             
             local_clip = ClipInfo(
@@ -87,7 +86,7 @@ class CombineStep(Step):
     step_name = "combine"
     progress = 90
     async def process(self, context: ProcessContext, event: VideoClipCombineTask):
-        if len(context.clip_list) <=2:
+        if len(context.clip_list) <2:
             raise Exception("Not enough clips to combine")
         
         download_videos = [clip.video_source_path for clip in context.clip_list]

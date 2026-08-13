@@ -101,7 +101,7 @@ class RedisState(BaseState):
             status=task.get('status', const.TASK_COMPLETE),
             message=task.get('message', ""),
             stage_times={
-                "endTime": task.get('end_time', None),
+                "endTime": task.get('end_time', None),  
                 "startQueuingTime": task.get('start_queuing_time', None),
                 "startProcessingTime": task.get('start_processing_time', None),
             },

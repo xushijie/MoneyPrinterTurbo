@@ -1,5 +1,6 @@
 import glob
 import random
+import os
 from typing import List
 from PIL import ImageFont, Image
 from loguru import logger

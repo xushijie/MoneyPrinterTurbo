@@ -1,9 +1,10 @@
 import asyncio
 import os
 import re
+import math
 from datetime import datetime
 from xml.sax.saxutils import unescape
-from edge_tts.submaker import mktimestamp
+
 from loguru import logger
 from edge_tts import submaker, SubMaker
 import edge_tts
@@ -12,6 +13,15 @@ from moviepy.video.tools import subtitles
 from app.config import config
 from app.utils import utils
 
+
+def mktimestamp(time_unit: float) -> str:
+    """
+    将 edge_tts 使用的 100 纳秒时间单位转换为标准 SRT 字幕时间戳 (HH:MM:SS.mmm)。
+    """
+    hour = math.floor(time_unit / 10**7 / 3600)
+    minute = math.floor((time_unit / 10**7 / 60) % 60)
+    seconds = (time_unit / 10**7) % 60
+    return f"{hour:02d}:{minute:02d}:{seconds:06.3f}"
 
 def get_all_azure_voices(filter_locals=None) -> list[str]:
     if filter_locals is None:

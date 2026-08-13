@@ -1,6 +1,6 @@
 import os
 import socket
-import toml
+import tomli
 import shutil
 from loguru import logger
 
@@ -22,12 +22,12 @@ def load_config():
     logger.info(f"load config from file: {config_file}")
 
     try:
-        _config_ = toml.load(config_file)
+        _config_ = tomli.load(config_file)
     except Exception as e:
         logger.warning(f"load config failed: {str(e)}, try to load as utf-8-sig")
         with open(config_file, mode="r", encoding='utf-8-sig') as fp:
             _cfg_content = fp.read()
-            _config_ = toml.loads(_cfg_content)
+            _config_ = tomli.loads(_cfg_content)
     return _config_
 
 

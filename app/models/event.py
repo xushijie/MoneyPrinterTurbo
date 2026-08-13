@@ -62,6 +62,7 @@ class VideoClipCombineTask(BaseModel):
     audio: Optional[str] = None
     background_music: Optional[str] = None
     submit_time: Optional[int] = None
+    version: Optional[int] = 1  # Version discriminator: 1 for existing flow, 2 for new coroutine-based handler
 
     
 """
